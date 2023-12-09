@@ -24,6 +24,15 @@
         </div> --}}
 
         <div class="flex items-center">
+            <div class="block md:hidden">
+                <a
+                    href="{{ route('dashboard') }}"
+                    class="flex items-center px-4 overflow-hidden text-white hover:text-gray-100 hover:bg-opacity-50"
+                    >
+                    <i class='text-2xl bx bxs-landscape' ></i>
+                    <span class="ml-2 text-lg font-medium duration-300 ease-in-out">Mi Finca</span>
+                </a>
+            </div>
             {{-- <a class="m-3 text-2xl text-white" href="{{ route('board') }}"><i class="bx bx-detail"></i></a>
             <livewire:new-ticket /> --}}
         </div>
