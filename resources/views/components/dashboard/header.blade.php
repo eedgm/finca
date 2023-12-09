@@ -1,4 +1,4 @@
-<header class="sticky top-0 z-50 grid w-full grid-cols-2 pl-6 bg-gray-800 h-14">
+<header class="sticky top-0 z-50 grid w-full grid-cols-2 pl-6 bg-green-800 h-14">
     <div class="flex items-center">
 
         <button class="p-2 mr-2 -ml-2" @click="isSidebarExpanded = !isSidebarExpanded">
@@ -51,7 +51,7 @@
             {{-- <livewire:choose-year /> --}}
 
             <!-- Profile dropdown -->
-            <div class="relative px-1 text-sm text-gray-400 bg-gray-700 cursor-pointer hover:text-white"
+            <div class="relative px-1 text-sm text-white bg-green-700 cursor-pointer hover:text-white"
                 x-data="{open: false}">
                 <div class="flex items-center min-h-full" @click="open = !open">
                     @if(Auth::check())

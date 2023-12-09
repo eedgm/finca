@@ -2,8 +2,8 @@
 
 @php
 $classes = ($active ?? false)
-            ? 'relative flex items-center justify-between w-full py-1 rounded truncate text-white bg-gray-700'
-            : 'relative flex items-center justify-between w-full py-1 rounded truncate hover:text-white hover:bg-gray-700';
+            ? 'relative flex items-center justify-between w-full py-1 rounded truncate text-white bg-green-700'
+            : 'relative flex items-center justify-between w-full py-1 rounded truncate hover:text-white hover:bg-green-700';
 @endphp
 <li class="relative">
     <a {{ $attributes->merge(['class' => $classes]) }}
