@@ -28,7 +28,7 @@ class CowUpdateRequest extends FormRequest
             'farm_id' => ['required', 'exists:farms,id'],
             'owner' => ['nullable', 'max:255', 'string'],
             'sold' => ['required', 'boolean'],
-            'picture' => ['image', 'max:1024', 'nullable'],
+            'picture' => ['image', 'max:5000', 'nullable'],
             'born' => ['nullable', 'date'],
         ];
     }
