@@ -27,7 +27,7 @@ class MedicineUpdateRequest extends FormRequest
             'cc' => ['nullable', 'numeric'],
             'cost' => ['nullable', 'numeric'],
             'market_id' => ['required', 'exists:markets,id'],
-            'picture' => ['image', 'max:1024', 'nullable'],
+            'picture' => ['image', 'max:5000', 'nullable'],
         ];
     }
 }
