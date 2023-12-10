@@ -75,7 +75,7 @@
 
     <x-inputs.group class="w-full">
         <div
-            x-data="imageViewer('{{ $editing && $cow->picture ? \Storage::url($cow->picture) : '' }}')"
+            x-data="imageViewer('{{ $editing && $medicine->picture ? \Storage::url($medicine->picture) : '' }}')"
         >
             <x-inputs.partials.label
                 name="picture"
