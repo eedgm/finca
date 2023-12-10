@@ -19,6 +19,7 @@ class Medicine extends Model
         'cc',
         'cost',
         'market_id',
+        'picture'
     ];
 
     protected $searchableFields = ['*'];

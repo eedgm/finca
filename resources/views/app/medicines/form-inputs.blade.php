@@ -72,4 +72,45 @@
             @endforeach
         </x-inputs.select>
     </x-inputs.group>
+
+    <x-inputs.group class="w-full">
+        <div
+            x-data="imageViewer('{{ $editing && $cow->picture ? \Storage::url($cow->picture) : '' }}')"
+        >
+            <x-inputs.partials.label
+                name="picture"
+                label="Picture"
+            ></x-inputs.partials.label
+            ><br />
+
+            <!-- Show the image -->
+            <template x-if="imageUrl">
+                <img
+                    :src="imageUrl"
+                    class="object-cover border border-gray-200 rounded"
+                    style="width: 100px; height: 100px;"
+                />
+            </template>
+
+            <!-- Show the gray box when image is not available -->
+            <template x-if="!imageUrl">
+                <div
+                    class="bg-gray-100 border border-gray-200 rounded"
+                    style="width: 100px; height: 100px;"
+                ></div>
+            </template>
+
+            <div class="mt-2">
+                <input
+                    type="file"
+                    name="picture"
+                    id="picture"
+                    @change="fileChosen"
+                />
+            </div>
+
+            @error('picture') @include('components.inputs.partials.error')
+            @enderror
+        </div>
+    </x-inputs.group>
 </div>

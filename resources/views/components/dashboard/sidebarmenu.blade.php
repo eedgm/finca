@@ -17,7 +17,10 @@
         </x-dashboard.sidebar-link>
     @endcan
     @can('view-any', App\Models\Medicine::class)
-        <x-dashboard.sidebar-link name="Medicinas" href="{{ route('medicines.index') }}" :active="request()->routeIs('medicines.index')" icon="{{ 'bxs-capsule' }}">
+        <x-dashboard.sidebar-link id="2" name="Medicinas" href="javascript:;" :active="request()->routeIs('medicines.index')" icon="{{ 'bxs-capsule' }}">
+            <x-dashboard.child-link name="Todas" href="{{ route('medicines.index') }}" />
+            <x-dashboard.child-link name="Tiendas" href="{{ route('markets.index') }}" />
+            <x-dashboard.child-link name="Fabricantes" href="{{ route('manufacturers.index') }}" />
         </x-dashboard.sidebar-link>
     @endcan
 

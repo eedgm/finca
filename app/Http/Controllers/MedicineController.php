@@ -55,6 +55,11 @@ class MedicineController extends Controller
 
         $validated = $request->validated();
 
+        $validated = $request->validated();
+        if ($request->hasFile('picture')) {
+            $validated['picture'] = $request->file('picture')->store('public');
+        }
+
         $medicine = Medicine::create($validated);
 
         return redirect()
@@ -98,6 +103,13 @@ class MedicineController extends Controller
         $this->authorize('update', $medicine);
 
         $validated = $request->validated();
+        if ($request->hasFile('picture')) {
+            if ($cow->picture) {
+                Storage::delete($cow->picture);
+            }
+
+            $validated['picture'] = $request->file('picture')->store('public');
+        }
 
         $medicine->update($validated);
 
