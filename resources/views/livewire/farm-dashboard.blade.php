@@ -1,0 +1,574 @@
+<div>
+    <div class="mb-5 mt-0">
+        <div class="flex flex-wrap justify-between items-center mb-4">
+            <div class="md:w-1/2">
+                <h3 class="text-lg font-semibold text-gray-700">
+                    Vacas por Tipo
+                </h3>
+            </div>
+            <div class="md:w-1/2 text-right">
+                @can('create', App\Models\Cow::class)
+                <button
+                    wire:click="newCow"
+                    class="button button-primary"
+                >
+                    <i class="mr-1 icon ion-md-add"></i>
+                    Agregar Vaca
+                </button>
+                @endcan
+            </div>
+        </div>
+
+        <!-- Search Filters -->
+        <div class="bg-gray-50 p-4 rounded-lg mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Buscar por Número
+                    </label>
+                    <x-inputs.text
+                        name="searchNumber"
+                        wire:model.debounce.300ms="searchNumber"
+                        placeholder="Número de vaca..."
+                        autocomplete="off"
+                    ></x-inputs.text>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Filtrar por Sexo
+                    </label>
+                    <x-inputs.select
+                        name="searchGender"
+                        wire:model="searchGender"
+                    >
+                        <option value="">Todos</option>
+                        <option value="male">Macho</option>
+                        <option value="female">Hembra</option>
+                    </x-inputs.select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Buscar en Historial
+                    </label>
+                    <x-inputs.text
+                        name="searchHistory"
+                        wire:model.debounce.300ms="searchHistory"
+                        placeholder="Comentarios, tipo, fecha..."
+                        autocomplete="off"
+                    ></x-inputs.text>
+                </div>
+
+                <div class="flex items-end">
+                    <button
+                        wire:click="clearSearch"
+                        class="button w-full"
+                        type="button"
+                    >
+                        <i class="mr-1 icon ion-md-close"></i>
+                        Limpiar Búsqueda
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if($cowsByType->isEmpty())
+        <div class="text-center py-12">
+            <p class="text-gray-500 text-lg">
+                No hay vacas registradas aún.
+            </p>
+            @can('create', App\Models\Cow::class)
+            <button
+                wire:click="newCow"
+                class="inline-block mt-4 button button-primary"
+            >
+                <i class="mr-1 icon ion-md-add"></i>
+                Agregar Primera Vaca
+            </button>
+            @endcan
+        </div>
+    @else
+        <div class="space-y-6">
+            @foreach($cowsByType as $typeName => $cows)
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="bg-green-800 px-4 py-3">
+                        <h4 class="text-lg font-semibold text-white">
+                            {{ $typeName }} 
+                            <span class="text-sm font-normal text-gray-200">
+                                ({{ $cows->count() }} {{ $cows->count() === 1 ? 'vaca' : 'vacas' }})
+                            </span>
+                        </h4>
+                    </div>
+                    <div class="bg-white">
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Número
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Nombre
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Género
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Finca
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Nacimiento
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Foto
+                                        </th>
+                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Acciones
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @foreach($cows as $cow)
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                            {{ $cow->number ?? '-' }}
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                            {{ $cow->name ?? '-' }}
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                            <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $cow->gender === 'male' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800' }}">
+                                                {{ $cow->gender === 'male' ? 'Macho' : 'Hembra' }}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                            {{ $cow->farm->name ?? '-' }}
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                            {{ $cow->born ? $cow->born->format('d/m/Y') : '-' }}
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                            @if($cow->picture)
+                                                <x-partials.thumbnail
+                                                    src="{{ \Storage::url($cow->picture) }}"
+                                                />
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-center">
+                                            <div class="flex justify-center space-x-2">
+                                                @can('view', $cow)
+                                                <button
+                                                    wire:click="viewCow({{ $cow->id }})"
+                                                    class="text-blue-600 hover:text-blue-900"
+                                                    title="Ver"
+                                                >
+                                                    <i class="icon ion-md-eye text-xl"></i>
+                                                </button>
+                                                @endcan
+                                                @can('update', $cow)
+                                                <button
+                                                    wire:click="editCow({{ $cow->id }})"
+                                                    class="text-green-600 hover:text-green-900"
+                                                    title="Editar"
+                                                >
+                                                    <i class="icon ion-md-create text-xl"></i>
+                                                </button>
+                                                @endcan
+                                                @can('create', App\Models\History::class)
+                                                <button
+                                                    wire:click="newHistory({{ $cow->id }})"
+                                                    class="text-purple-600 hover:text-purple-900"
+                                                    title="Agregar Historial"
+                                                >
+                                                    <i class="icon ion-md-add-circle text-xl"></i>
+                                                </button>
+                                                @endcan
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @endif
+
+    <!-- Modal para Crear/Editar Vaca -->
+    <x-modal wire:model="showingCowModal">
+        <div class="px-6 py-4">
+            <div class="text-lg font-bold">{{ $cowModalTitle }}</div>
+
+            <div class="mt-5">
+                <x-inputs.group class="w-full">
+                    <x-inputs.number
+                        name="cowNumber"
+                        label="Número"
+                        wire:model="cowNumber"
+                        max="255"
+                        placeholder="Número"
+                    ></x-inputs.number>
+                    @error('cowNumber') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </x-inputs.group>
+
+                <x-inputs.group class="w-full">
+                    <x-inputs.text
+                        name="cowName"
+                        label="Nombre"
+                        wire:model="cowName"
+                        maxlength="255"
+                        placeholder="Nombre"
+                    ></x-inputs.text>
+                    @error('cowName') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </x-inputs.group>
+
+                <x-inputs.group class="w-full">
+                    <x-inputs.select
+                        name="cowGender"
+                        label="Género"
+                        wire:model="cowGender"
+                    >
+                        <option value="male">Macho</option>
+                        <option value="female">Hembra</option>
+                    </x-inputs.select>
+                    @error('cowGender') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </x-inputs.group>
+
+                <x-inputs.group class="w-full">
+                    <x-inputs.text
+                        name="cowParentId"
+                        label="ID Padre"
+                        wire:model="cowParentId"
+                        maxlength="255"
+                        placeholder="ID Padre"
+                    ></x-inputs.text>
+                    @error('cowParentId') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </x-inputs.group>
+
+                <x-inputs.group class="w-full">
+                    <x-inputs.text
+                        name="cowMotherId"
+                        label="ID Madre"
+                        wire:model="cowMotherId"
+                        maxlength="255"
+                        placeholder="ID Madre"
+                    ></x-inputs.text>
+                    @error('cowMotherId') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </x-inputs.group>
+
+                <x-inputs.group class="w-full">
+                    <x-inputs.select
+                        name="cowFarmId"
+                        label="Finca"
+                        wire:model="cowFarmId"
+                        required
+                    >
+                        <option value="">Seleccione una Finca</option>
+                        @foreach($farmsForSelect as $value => $label)
+                        <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </x-inputs.select>
+                    @error('cowFarmId') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </x-inputs.group>
+
+                <x-inputs.group class="w-full">
+                    <x-inputs.text
+                        name="cowOwner"
+                        label="Propietario"
+                        wire:model="cowOwner"
+                        maxlength="255"
+                        placeholder="Propietario"
+                    ></x-inputs.text>
+                    @error('cowOwner') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </x-inputs.group>
+
+                <x-inputs.group class="w-full">
+                    <x-inputs.checkbox
+                        name="cowSold"
+                        label="Vendida"
+                        wire:model="cowSold"
+                    ></x-inputs.checkbox>
+                    @error('cowSold') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </x-inputs.group>
+
+                <x-inputs.group class="w-full">
+                    <div
+                        image-url="{{ $editingCow && $cow && $cow->picture ? \Storage::url($cow->picture) : '' }}"
+                        x-data="imageViewer()"
+                        @refresh.window="refreshUrl()"
+                    >
+                        <x-inputs.partials.label
+                            name="cowPicture"
+                            label="Foto"
+                        ></x-inputs.partials.label>
+                        <br />
+
+                        <template x-if="imageUrl">
+                            <img
+                                :src="imageUrl"
+                                class="object-cover rounded border border-gray-200"
+                                style="width: 100px; height: 100px;"
+                            />
+                        </template>
+
+                        <template x-if="!imageUrl">
+                            <div
+                                class="border rounded border-gray-200 bg-gray-100"
+                                style="width: 100px; height: 100px;"
+                            ></div>
+                        </template>
+
+                        <div class="mt-2">
+                            <input
+                                type="file"
+                                name="cowPicture"
+                                id="cowPicture"
+                                wire:model="cowPicture"
+                                @change="fileChosen"
+                            />
+                        </div>
+                        @error('cowPicture') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                    </div>
+                </x-inputs.group>
+
+                <x-inputs.group class="w-full">
+                    <x-inputs.date
+                        name="cowBorn"
+                        label="Fecha de Nacimiento"
+                        wire:model="cowBorn"
+                    ></x-inputs.date>
+                    @error('cowBorn') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </x-inputs.group>
+            </div>
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 flex justify-between">
+            <button
+                type="button"
+                class="button"
+                wire:click="closeModals"
+            >
+                <i class="mr-1 icon ion-md-close"></i>
+                Cancelar
+            </button>
+
+            <button
+                type="button"
+                class="button button-primary"
+                wire:click="saveCow"
+            >
+                <i class="mr-1 icon ion-md-save"></i>
+                Guardar
+            </button>
+        </div>
+    </x-modal>
+
+    <!-- Modal para Ver Vaca -->
+    <x-modal wire:model="showingViewCowModal">
+        <div class="px-6 py-4">
+            <div class="text-lg font-bold">Detalles de la Vaca</div>
+
+            @if($cow)
+            <div class="mt-5 space-y-4">
+                <div>
+                    <h5 class="font-medium text-gray-700">Número</h5>
+                    <span>{{ $cow->number ?? '-' }}</span>
+                </div>
+                <div>
+                    <h5 class="font-medium text-gray-700">Nombre</h5>
+                    <span>{{ $cow->name ?? '-' }}</span>
+                </div>
+                <div>
+                    <h5 class="font-medium text-gray-700">Género</h5>
+                    <span>{{ $cow->gender === 'male' ? 'Macho' : 'Hembra' }}</span>
+                </div>
+                <div>
+                    <h5 class="font-medium text-gray-700">Finca</h5>
+                    <span>{{ $cow->farm->name ?? '-' }}</span>
+                </div>
+                <div>
+                    <h5 class="font-medium text-gray-700">ID Padre</h5>
+                    <span>{{ $cow->parent_id ?? '-' }}</span>
+                </div>
+                <div>
+                    <h5 class="font-medium text-gray-700">ID Madre</h5>
+                    <span>{{ $cow->mother_id ?? '-' }}</span>
+                </div>
+                <div>
+                    <h5 class="font-medium text-gray-700">Propietario</h5>
+                    <span>{{ $cow->owner ?? '-' }}</span>
+                </div>
+                <div>
+                    <h5 class="font-medium text-gray-700">Vendida</h5>
+                    <span>{{ $cow->sold ? 'Sí' : 'No' }}</span>
+                </div>
+                <div>
+                    <h5 class="font-medium text-gray-700">Fecha de Nacimiento</h5>
+                    <span>{{ $cow->born ? $cow->born->format('d/m/Y') : '-' }}</span>
+                </div>
+                <div>
+                    <h5 class="font-medium text-gray-700">Foto</h5>
+                    @if($cow->picture)
+                        <x-partials.thumbnail
+                            src="{{ \Storage::url($cow->picture) }}"
+                            size="150"
+                        />
+                    @else
+                        <span class="text-gray-400">Sin foto</span>
+                    @endif
+                </div>
+                @if($cow->histories && $cow->histories->count() > 0)
+                <div>
+                    <h5 class="font-medium text-gray-700 mb-2">Historiales</h5>
+                    <div class="space-y-2">
+                        @foreach($cow->histories as $history)
+                        <div class="border border-gray-200 rounded p-2">
+                            <p class="text-sm"><strong>Fecha:</strong> {{ $history->date->format('d/m/Y') }}</p>
+                            @if($history->weight)
+                            <p class="text-sm"><strong>Peso:</strong> {{ $history->weight }} kg</p>
+                            @endif
+                            @if($history->cowType)
+                            <p class="text-sm"><strong>Tipo:</strong> {{ $history->cowType->name }}</p>
+                            @endif
+                            @if($history->comments)
+                            <p class="text-sm"><strong>Comentarios:</strong> {{ $history->comments }}</p>
+                            @endif
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+            </div>
+            @endif
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 flex justify-end">
+            <button
+                type="button"
+                class="button"
+                wire:click="closeModals"
+            >
+                <i class="mr-1 icon ion-md-close"></i>
+                Cerrar
+            </button>
+        </div>
+    </x-modal>
+
+    <!-- Modal para Agregar Historial -->
+    <x-modal wire:model="showingHistoryModal">
+        <div class="px-6 py-4">
+            <div class="text-lg font-bold">Agregar Historial</div>
+
+            <div class="mt-5">
+                <x-inputs.group class="w-full">
+                    <x-inputs.date
+                        name="historyDate"
+                        label="Fecha"
+                        wire:model="historyDate"
+                        required
+                    ></x-inputs.date>
+                    @error('historyDate') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </x-inputs.group>
+
+                <x-inputs.group class="w-full">
+                    <x-inputs.number
+                        name="historyWeight"
+                        label="Peso (kg)"
+                        wire:model="historyWeight"
+                        step="0.01"
+                        placeholder="Peso"
+                    ></x-inputs.number>
+                    @error('historyWeight') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </x-inputs.group>
+
+                <x-inputs.group class="w-full">
+                    <x-inputs.select
+                        name="historyCowTypeId"
+                        label="Tipo de Vaca"
+                        wire:model="historyCowTypeId"
+                    >
+                        <option value="">Seleccione un Tipo</option>
+                        @foreach($cowTypesForSelect as $value => $label)
+                        <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </x-inputs.select>
+                    @error('historyCowTypeId') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </x-inputs.group>
+
+                <x-inputs.group class="w-full">
+                    <x-inputs.textarea
+                        name="historyComments"
+                        label="Comentarios"
+                        wire:model="historyComments"
+                        maxlength="255"
+                    ></x-inputs.textarea>
+                    @error('historyComments') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </x-inputs.group>
+
+                <x-inputs.group class="w-full">
+                    <div
+                        x-data="imageViewer()"
+                    >
+                        <x-inputs.partials.label
+                            name="historyPicture"
+                            label="Foto"
+                        ></x-inputs.partials.label>
+                        <br />
+
+                        <template x-if="imageUrl">
+                            <img
+                                :src="imageUrl"
+                                class="object-cover rounded border border-gray-200"
+                                style="width: 100px; height: 100px;"
+                            />
+                        </template>
+
+                        <template x-if="!imageUrl">
+                            <div
+                                class="border rounded border-gray-200 bg-gray-100"
+                                style="width: 100px; height: 100px;"
+                            ></div>
+                        </template>
+
+                        <div class="mt-2">
+                            <input
+                                type="file"
+                                name="historyPicture"
+                                id="historyPicture"
+                                wire:model="historyPicture"
+                                @change="fileChosen"
+                            />
+                        </div>
+                        @error('historyPicture') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                    </div>
+                </x-inputs.group>
+            </div>
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 flex justify-between">
+            <button
+                type="button"
+                class="button"
+                wire:click="closeModals"
+            >
+                <i class="mr-1 icon ion-md-close"></i>
+                Cancelar
+            </button>
+
+            <button
+                type="button"
+                class="button button-primary"
+                wire:click="saveHistory"
+            >
+                <i class="mr-1 icon ion-md-save"></i>
+                Guardar
+            </button>
+        </div>
+    </x-modal>
+</div>
