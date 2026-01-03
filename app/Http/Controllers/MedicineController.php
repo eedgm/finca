@@ -20,14 +20,7 @@ class MedicineController extends Controller
     {
         $this->authorize('view-any', Medicine::class);
 
-        $search = $request->get('search', '');
-
-        $medicines = Medicine::search($search)
-            ->latest()
-            ->paginate(5)
-            ->withQueryString();
-
-        return view('app.medicines.index', compact('medicines', 'search'));
+        return view('app.medicines.index');
     }
 
     /**
@@ -104,8 +97,8 @@ class MedicineController extends Controller
 
         $validated = $request->validated();
         if ($request->hasFile('picture')) {
-            if ($cow->picture) {
-                Storage::delete($cow->picture);
+            if ($medicine->picture) {
+                Storage::delete($medicine->picture);
             }
 
             $validated['picture'] = $request->file('picture')->store('public');

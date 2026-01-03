@@ -6,10 +6,12 @@ use App\Models\Cow;
 use App\Models\Farm;
 use App\Models\History;
 use App\Models\CowType;
+use App\Models\Medicine;
 use Livewire\Component;
 use Illuminate\View\View;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class FarmDashboard extends Component
@@ -46,10 +48,19 @@ class FarmDashboard extends Component
     public $historyComments;
     public $historyPicture;
     public $selectedCowId;
+    public $selectedMedicines = [];
+    public $medicineCc = [];
+    public $selectedMedicine = null;
+    
+    // Gallery properties
+    public $showingGallery = false;
+    public $galleryImages = [];
+    public $currentImageIndex = 0;
     
     // Data for selects
     public $farmsForSelect = [];
     public $cowTypesForSelect = [];
+    public $medicinesForSelect = [];
     
     // Search properties
     public $searchNumber = '';
@@ -86,6 +97,7 @@ class FarmDashboard extends Component
         $user = auth()->user();
         $this->farmsForSelect = $user->farms->pluck('name', 'id')->toArray();
         $this->cowTypesForSelect = CowType::pluck('name', 'id')->toArray();
+        $this->medicinesForSelect = Medicine::pluck('name', 'id')->toArray();
     }
 
     public function newCow(): void
@@ -98,7 +110,7 @@ class FarmDashboard extends Component
 
     public function viewCow($cowId): void
     {
-        $this->cow = Cow::with(['farm', 'histories.cowType'])->findOrFail($cowId);
+        $this->cow = Cow::with(['farm', 'histories.cowType', 'histories.medicines'])->findOrFail($cowId);
         $this->authorize('view', $this->cow);
         $this->showingViewCowModal = true;
     }
@@ -128,7 +140,22 @@ class FarmDashboard extends Component
         $this->selectedCowId = $cowId;
         $this->resetHistoryForm();
         $this->historyDate = now()->format('Y-m-d');
+        $this->selectedMedicines = [];
+        $this->medicineCc = [];
         $this->showingHistoryModal = true;
+    }
+    
+    public function getCowHistoriesProperty()
+    {
+        if (!$this->selectedCowId) {
+            return collect();
+        }
+        
+        return Cow::with(['histories.cowType', 'histories.medicines'])
+            ->findOrFail($this->selectedCowId)
+            ->histories()
+            ->orderBy('date', 'desc')
+            ->get();
     }
 
     public function resetCowForm(): void
@@ -156,7 +183,61 @@ class FarmDashboard extends Component
         $this->historyComments = null;
         $this->historyPicture = null;
         $this->history = null;
+        $this->selectedMedicines = [];
+        $this->medicineCc = [];
         $this->resetErrorBag();
+    }
+    
+    public function openGallery($cowId): void
+    {
+        $cow = Cow::with(['histories'])->findOrFail($cowId);
+        $this->galleryImages = [];
+        
+        // Add cow picture
+        if ($cow->picture) {
+            $this->galleryImages[] = [
+                'type' => 'cow',
+                'url' => Storage::url($cow->picture),
+                'title' => 'Foto de la Vaca',
+                'date' => $cow->created_at,
+            ];
+        }
+        
+        // Add history pictures
+        foreach ($cow->histories as $history) {
+            if ($history->picture) {
+                $this->galleryImages[] = [
+                    'type' => 'history',
+                    'url' => Storage::url($history->picture),
+                    'title' => 'Historial - ' . $history->date->format('d/m/Y'),
+                    'date' => $history->date,
+                ];
+            }
+        }
+        
+        $this->currentImageIndex = 0;
+        $this->showingGallery = true;
+    }
+    
+    public function nextImage(): void
+    {
+        if ($this->currentImageIndex < count($this->galleryImages) - 1) {
+            $this->currentImageIndex++;
+        }
+    }
+    
+    public function previousImage(): void
+    {
+        if ($this->currentImageIndex > 0) {
+            $this->currentImageIndex--;
+        }
+    }
+    
+    public function closeGallery(): void
+    {
+        $this->showingGallery = false;
+        $this->galleryImages = [];
+        $this->currentImageIndex = 0;
     }
 
     public function saveCow(): void
@@ -227,14 +308,103 @@ class FarmDashboard extends Component
         $history->comments = $this->historyComments;
 
         if ($this->historyPicture) {
-            $history->picture = $this->historyPicture->store('public');
+            // Optimize and resize image using GD
+            $imagePath = $this->historyPicture->getRealPath();
+            $imageInfo = getimagesize($imagePath);
+            
+            if ($imageInfo) {
+                $maxWidth = 1200;
+                $maxHeight = 1200;
+                list($width, $height) = $imageInfo;
+                
+                // Calculate new dimensions maintaining aspect ratio
+                $ratio = min($maxWidth / $width, $maxHeight / $height);
+                $newWidth = (int)($width * $ratio);
+                $newHeight = (int)($height * $ratio);
+                
+                // Create image resource based on type
+                $source = null;
+                switch ($imageInfo[2]) {
+                    case IMAGETYPE_JPEG:
+                        $source = imagecreatefromjpeg($imagePath);
+                        break;
+                    case IMAGETYPE_PNG:
+                        $source = imagecreatefrompng($imagePath);
+                        break;
+                    case IMAGETYPE_GIF:
+                        $source = imagecreatefromgif($imagePath);
+                        break;
+                }
+                
+                if ($source) {
+                    // Create new image with optimized size
+                    $optimized = imagecreatetruecolor($newWidth, $newHeight);
+                    
+                    // Preserve transparency for PNG
+                    if ($imageInfo[2] == IMAGETYPE_PNG) {
+                        imagealphablending($optimized, false);
+                        imagesavealpha($optimized, true);
+                        $transparent = imagecolorallocatealpha($optimized, 255, 255, 255, 127);
+                        imagefilledrectangle($optimized, 0, 0, $newWidth, $newHeight, $transparent);
+                    }
+                    
+                    imagecopyresampled($optimized, $source, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                    
+                    // Save optimized image
+                    $path = 'public/histories/' . uniqid() . '.jpg';
+                    $fullPath = storage_path('app/' . $path);
+                    
+                    // Create directory if it doesn't exist
+                    $dir = dirname($fullPath);
+                    if (!is_dir($dir)) {
+                        mkdir($dir, 0755, true);
+                    }
+                    
+                    imagejpeg($optimized, $fullPath, 85);
+                    imagedestroy($source);
+                    imagedestroy($optimized);
+                    
+                    $history->picture = $path;
+                } else {
+                    // Fallback to original if optimization fails
+                    $history->picture = $this->historyPicture->store('public/histories');
+                }
+            } else {
+                // Fallback to original if getimagesize fails
+                $history->picture = $this->historyPicture->store('public/histories');
+            }
         }
 
         $history->save();
         $history->cows()->attach($this->selectedCowId);
+        
+        // Attach medicines if selected
+        if (!empty($this->selectedMedicines)) {
+            $medicinesData = [];
+            foreach ($this->selectedMedicines as $medicineId) {
+                $medicinesData[$medicineId] = [
+                    'cc' => $this->medicineCc[$medicineId] ?? null,
+                ];
+            }
+            $history->medicines()->attach($medicinesData);
+        }
 
         $this->showingHistoryModal = false;
         $this->resetHistoryForm();
+    }
+    
+    public function addMedicineToHistory($medicineId): void
+    {
+        if (!in_array($medicineId, $this->selectedMedicines)) {
+            $this->selectedMedicines[] = $medicineId;
+            $this->medicineCc[$medicineId] = null;
+        }
+    }
+    
+    public function removeMedicineFromHistory($medicineId): void
+    {
+        $this->selectedMedicines = array_values(array_filter($this->selectedMedicines, fn($id) => $id != $medicineId));
+        unset($this->medicineCc[$medicineId]);
     }
 
     public function closeModals(): void
@@ -242,6 +412,7 @@ class FarmDashboard extends Component
         $this->showingCowModal = false;
         $this->showingViewCowModal = false;
         $this->showingHistoryModal = false;
+        $this->showingGallery = false;
         $this->resetCowForm();
         $this->resetHistoryForm();
     }
@@ -281,7 +452,7 @@ class FarmDashboard extends Component
             $farmIds = $farms->pluck('id');
             $cows = Cow::whereIn('farm_id', $farmIds)
                 ->with(['farm', 'histories' => function ($query) {
-                    $query->orderBy('date', 'desc')->with('cowType');
+                    $query->orderBy('date', 'desc')->with(['cowType', 'medicines']);
                 }])
                 ->get();
             

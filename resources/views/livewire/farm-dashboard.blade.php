@@ -20,8 +20,22 @@
         </div>
 
         <!-- Search Filters -->
-        <div class="bg-gray-50 p-4 rounded-lg mb-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-gray-50 p-4 rounded-lg mb-4" x-data="{ filtersOpen: false }">
+            <div class="flex items-center justify-between mb-2 md:hidden">
+                <h4 class="text-sm font-medium text-gray-700">Filtros de Búsqueda</h4>
+                <button
+                    @click="filtersOpen = !filtersOpen"
+                    class="p-2 text-gray-600 hover:text-gray-800"
+                    type="button"
+                >
+                    <i class="text-xl bx" :class="filtersOpen ? 'bx-chevron-up' : 'bx-chevron-down'"></i>
+                </button>
+            </div>
+            <div 
+                class="grid grid-cols-1 md:grid-cols-4 gap-4"
+                :class="filtersOpen || window.innerWidth >= 768 ? 'block' : 'hidden'"
+                x-show="filtersOpen || window.innerWidth >= 768"
+            >
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
                         Buscar por Número
@@ -413,12 +427,21 @@
                     <span>{{ $cow->born ? $cow->born->format('d/m/Y') : '-' }}</span>
                 </div>
                 <div>
-                    <h5 class="font-medium text-gray-700">Foto</h5>
+                    <h5 class="font-medium text-gray-700 mb-2">Foto</h5>
                     @if($cow->picture)
-                        <x-partials.thumbnail
-                            src="{{ \Storage::url($cow->picture) }}"
-                            size="150"
-                        />
+                        <div class="flex items-center space-x-2">
+                            <x-partials.thumbnail
+                                src="{{ \Storage::url($cow->picture) }}"
+                                size="150"
+                            />
+                            <button
+                                wire:click="openGallery({{ $cow->id }})"
+                                class="text-blue-600 hover:text-blue-900 text-sm"
+                            >
+                                <i class="icon ion-md-images mr-1"></i>
+                                Ver Galería
+                            </button>
+                        </div>
                     @else
                         <span class="text-gray-400">Sin foto</span>
                     @endif
@@ -426,7 +449,7 @@
                 @if($cow->histories && $cow->histories->count() > 0)
                 <div>
                     <h5 class="font-medium text-gray-700 mb-2">Historiales</h5>
-                    <div class="space-y-2">
+                    <div class="space-y-2 max-h-64 overflow-y-auto">
                         @foreach($cow->histories as $history)
                         <div class="border border-gray-200 rounded p-2">
                             <p class="text-sm"><strong>Fecha:</strong> {{ $history->date->format('d/m/Y') }}</p>
@@ -438,6 +461,26 @@
                             @endif
                             @if($history->comments)
                             <p class="text-sm"><strong>Comentarios:</strong> {{ $history->comments }}</p>
+                            @endif
+                            @if($history->picture)
+                            <div class="mt-2">
+                                <img 
+                                    src="{{ \Storage::url($history->picture) }}" 
+                                    alt="Historial {{ $history->date->format('d/m/Y') }}"
+                                    class="w-20 h-20 object-cover rounded cursor-pointer"
+                                    onclick="window.open('{{ \Storage::url($history->picture) }}', '_blank')"
+                                />
+                            </div>
+                            @endif
+                            @if($history->medicines && $history->medicines->count() > 0)
+                            <div class="mt-2">
+                                <p class="text-xs font-semibold text-gray-600">Medicamentos:</p>
+                                <ul class="text-xs text-gray-600 list-disc list-inside">
+                                    @foreach($history->medicines as $medicine)
+                                    <li>{{ $medicine->name }} @if($medicine->pivot->cc)({{ $medicine->pivot->cc }} cc)@endif</li>
+                                    @endforeach
+                                </ul>
+                            </div>
                             @endif
                         </div>
                         @endforeach
@@ -462,8 +505,37 @@
 
     <!-- Modal para Agregar Historial -->
     <x-modal wire:model="showingHistoryModal">
-        <div class="px-6 py-4">
+        <div class="px-6 py-4 max-h-[90vh] overflow-y-auto">
             <div class="text-lg font-bold">Agregar Historial</div>
+
+            @if($selectedCowId)
+            <!-- Historiales Anteriores -->
+            <div class="mt-4 mb-4 p-3 bg-gray-50 rounded-lg">
+                <h6 class="font-semibold text-gray-700 mb-2">Historiales Anteriores</h6>
+                <div class="space-y-2 max-h-48 overflow-y-auto">
+                    @foreach($this->cowHistories as $prevHistory)
+                    <div class="border border-gray-200 rounded p-2 bg-white text-sm">
+                        <p><strong>Fecha:</strong> {{ $prevHistory->date->format('d/m/Y') }}</p>
+                        @if($prevHistory->weight)
+                        <p><strong>Peso:</strong> {{ $prevHistory->weight }} kg</p>
+                        @endif
+                        @if($prevHistory->cowType)
+                        <p><strong>Tipo:</strong> {{ $prevHistory->cowType->name }}</p>
+                        @endif
+                        @if($prevHistory->medicines && $prevHistory->medicines->count() > 0)
+                        <p class="text-xs text-gray-600">
+                            <strong>Medicamentos:</strong> 
+                            {{ $prevHistory->medicines->pluck('name')->implode(', ') }}
+                        </p>
+                        @endif
+                    </div>
+                    @endforeach
+                    @if($this->cowHistories->isEmpty())
+                    <p class="text-sm text-gray-500">No hay historiales anteriores</p>
+                    @endif
+                </div>
+            </div>
+            @endif
 
             <div class="mt-5">
                 <x-inputs.group class="w-full">
@@ -517,7 +589,7 @@
                     >
                         <x-inputs.partials.label
                             name="historyPicture"
-                            label="Foto"
+                            label="Foto (se optimizará automáticamente)"
                         ></x-inputs.partials.label>
                         <br />
 
@@ -525,14 +597,14 @@
                             <img
                                 :src="imageUrl"
                                 class="object-cover rounded border border-gray-200"
-                                style="width: 100px; height: 100px;"
+                                style="width: 150px; height: 150px;"
                             />
                         </template>
 
                         <template x-if="!imageUrl">
                             <div
                                 class="border rounded border-gray-200 bg-gray-100"
-                                style="width: 100px; height: 100px;"
+                                style="width: 150px; height: 150px;"
                             ></div>
                         </template>
 
@@ -542,10 +614,57 @@
                                 name="historyPicture"
                                 id="historyPicture"
                                 wire:model="historyPicture"
+                                accept="image/*"
                                 @change="fileChosen"
                             />
                         </div>
+                        <p class="text-xs text-gray-500 mt-1">La imagen se redimensionará automáticamente a máximo 1200px</p>
                         @error('historyPicture') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                    </div>
+                </x-inputs.group>
+
+                <!-- Medicamentos -->
+                <x-inputs.group class="w-full">
+                    <x-inputs.partials.label
+                        name="medicines"
+                        label="Medicamentos"
+                    ></x-inputs.partials.label>
+                    <div class="mt-2 space-y-2">
+                        <div class="flex gap-2">
+                            <select 
+                                wire:model="selectedMedicine"
+                                class="flex-1 rounded border-gray-300"
+                                onchange="if(this.value) { @this.addMedicineToHistory(this.value); this.value = ''; }"
+                            >
+                                <option value="">Seleccionar Medicamento</option>
+                                @foreach($medicinesForSelect as $id => $name)
+                                <option value="{{ $id }}">{{ $name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @if(!empty($selectedMedicines))
+                        <div class="space-y-2 mt-2">
+                            @foreach($selectedMedicines as $medicineId)
+                            <div class="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                                <span class="flex-1 text-sm">{{ $medicinesForSelect[$medicineId] ?? 'N/A' }}</span>
+                                <input
+                                    type="number"
+                                    wire:model="medicineCc.{{ $medicineId }}"
+                                    placeholder="CC"
+                                    step="0.01"
+                                    class="w-20 rounded border-gray-300 text-sm"
+                                />
+                                <button
+                                    type="button"
+                                    wire:click="removeMedicineFromHistory({{ $medicineId }})"
+                                    class="text-red-600 hover:text-red-800"
+                                >
+                                    <i class="icon ion-md-close"></i>
+                                </button>
+                            </div>
+                            @endforeach
+                        </div>
+                        @endif
                     </div>
                 </x-inputs.group>
             </div>
@@ -569,6 +688,96 @@
                 <i class="mr-1 icon ion-md-save"></i>
                 Guardar
             </button>
+        </div>
+    </x-modal>
+
+    <!-- Modal de Galería de Imágenes -->
+    <x-modal wire:model="showingGallery">
+        <div class="px-6 py-4">
+            <div class="flex items-center justify-between mb-4">
+                <div class="text-lg font-bold">
+                    Galería de Imágenes
+                    <span class="text-sm font-normal text-gray-600">
+                        @if(count($galleryImages) > 0)
+                            {{ $currentImageIndex + 1 }} / {{ count($galleryImages) }}
+                        @else
+                            0
+                        @endif
+                    </span>
+                </div>
+                <button
+                    type="button"
+                    wire:click="closeGallery"
+                    class="text-gray-600 hover:text-gray-800"
+                >
+                    <i class="icon ion-md-close text-2xl"></i>
+                </button>
+            </div>
+
+            @if(count($galleryImages) > 0)
+            <div class="relative">
+                <!-- Imagen Principal -->
+                <div class="mb-4">
+                    @if(isset($galleryImages[$currentImageIndex]))
+                    <img
+                        src="{{ $galleryImages[$currentImageIndex]['url'] }}"
+                        alt="{{ $galleryImages[$currentImageIndex]['title'] }}"
+                        class="w-full h-auto max-h-[60vh] object-contain mx-auto rounded-lg shadow-lg"
+                    />
+                    <p class="text-center text-sm text-gray-600 mt-2">
+                        {{ $galleryImages[$currentImageIndex]['title'] }}
+                        @if(isset($galleryImages[$currentImageIndex]['date']) && is_object($galleryImages[$currentImageIndex]['date']))
+                        - {{ $galleryImages[$currentImageIndex]['date']->format('d/m/Y') }}
+                        @endif
+                    </p>
+                    @endif
+                </div>
+
+                <!-- Navegación -->
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <button
+                        type="button"
+                        wire:click="previousImage"
+                        @if($currentImageIndex == 0) disabled @endif
+                        class="button {{ $currentImageIndex == 0 ? 'opacity-50 cursor-not-allowed' : '' }}"
+                    >
+                        <i class="icon ion-md-arrow-back"></i>
+                        Anterior
+                    </button>
+
+                    <!-- Miniaturas -->
+                    <div class="flex gap-2 overflow-x-auto max-w-md px-2">
+                        @foreach($galleryImages as $index => $image)
+                        <button
+                            type="button"
+                            wire:click="$set('currentImageIndex', {{ $index }})"
+                            class="flex-shrink-0"
+                        >
+                            <img
+                                src="{{ $image['url'] }}"
+                                alt="{{ $image['title'] }}"
+                                class="w-16 h-16 object-cover rounded border-2 {{ $currentImageIndex == $index ? 'border-blue-500' : 'border-gray-300' }}"
+                            />
+                        </button>
+                        @endforeach
+                    </div>
+
+                    <button
+                        type="button"
+                        wire:click="nextImage"
+                        @if($currentImageIndex >= count($galleryImages) - 1) disabled @endif
+                        class="button {{ $currentImageIndex >= count($galleryImages) - 1 ? 'opacity-50 cursor-not-allowed' : '' }}"
+                    >
+                        Siguiente
+                        <i class="icon ion-md-arrow-forward"></i>
+                    </button>
+                </div>
+            </div>
+            @else
+            <div class="text-center py-8">
+                <p class="text-gray-500">No hay imágenes disponibles</p>
+            </div>
+            @endif
         </div>
     </x-modal>
 </div>
