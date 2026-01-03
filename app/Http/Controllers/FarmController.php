@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Farm;
+use App\Models\Cow;
+use App\Models\CowType;
 use Illuminate\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -32,7 +34,27 @@ class FarmController extends Controller
     public function dashboard(Request $request): View
     {
         $this->authorize('view-any', Farm::class);
-        return view('app.farms.dashboard');
+        
+        // Get user's farms
+        $user = $request->user();
+        $farms = $user->farms;
+        
+        // Get all cows from user's farms, grouped by cow_type
+        $cowsByType = collect();
+        
+        if ($farms->isNotEmpty()) {
+            $farmIds = $farms->pluck('id');
+            $cows = Cow::whereIn('farm_id', $farmIds)
+                ->with(['cowType', 'farm'])
+                ->get();
+            
+            // Group cows by cow_type
+            $cowsByType = $cows->groupBy(function ($cow) {
+                return $cow->cowType ? $cow->cowType->name : 'Sin Tipo';
+            });
+        }
+        
+        return view('app.farms.dashboard', compact('cowsByType'));
     }
 
     /**

@@ -19,6 +19,7 @@ class Cow extends Model
         'parent_id',
         'mother_id',
         'farm_id',
+        'cow_type_id',
         'owner',
         'sold',
         'born',
@@ -44,5 +45,10 @@ class Cow extends Model
     public function histories()
     {
         return $this->belongsToMany(History::class);
+    }
+
+    public function cowType()
+    {
+        return $this->belongsTo(CowType::class);
     }
 }
