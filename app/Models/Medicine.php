@@ -17,15 +17,18 @@ class Medicine extends Model
         'expiration_date',
         'code',
         'cc',
+        'total_cc',
         'cost',
         'market_id',
-        'picture'
+        'picture',
+        'discarded'
     ];
 
     protected $searchableFields = ['*'];
 
     protected $casts = [
         'expiration_date' => 'date',
+        'discarded' => 'boolean',
     ];
 
     public function manufacturer()

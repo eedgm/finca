@@ -21,8 +21,10 @@ class MedicineIndex extends Component
     // Modal properties
     public $showingModal = false;
     public $showingViewModal = false;
+    public $showingHistoriesModal = false;
     public $modalTitle = 'Nueva Medicina';
     public $editing = false;
+    public $selectedMedicineForHistories = null;
     
     // Medicine form properties
     public $medicine;
@@ -31,8 +33,10 @@ class MedicineIndex extends Component
     public $medicineExpirationDate;
     public $medicineCode;
     public $medicineCc;
+    public $medicineTotalCc;
     public $medicineCost;
     public $medicineMarketId;
+    public $medicineDiscarded = false;
     public $medicinePicture;
     public $uploadIteration = 0;
     
@@ -57,7 +61,9 @@ class MedicineIndex extends Component
         'medicineExpirationDate' => ['nullable', 'date'],
         'medicineCode' => ['nullable', 'max:255', 'string'],
         'medicineCc' => ['nullable', 'numeric'],
+        'medicineTotalCc' => ['nullable', 'numeric'],
         'medicineCost' => ['nullable', 'numeric'],
+        'medicineDiscarded' => ['nullable', 'boolean'],
         'medicineMarketId' => ['required', 'exists:markets,id'],
         'medicinePicture' => ['image', 'max:5000', 'nullable'],
         'newManufacturerName' => ['required', 'max:255', 'string'],
@@ -105,8 +111,10 @@ class MedicineIndex extends Component
         $this->medicineExpirationDate = $this->medicine->expiration_date ? $this->medicine->expiration_date->format('Y-m-d') : null;
         $this->medicineCode = $this->medicine->code;
         $this->medicineCc = $this->medicine->cc;
+        $this->medicineTotalCc = $this->medicine->total_cc;
         $this->medicineCost = $this->medicine->cost;
         $this->medicineMarketId = $this->medicine->market_id;
+        $this->medicineDiscarded = $this->medicine->discarded ?? false;
         
         $this->showingModal = true;
     }
@@ -118,8 +126,10 @@ class MedicineIndex extends Component
         $this->medicineExpirationDate = null;
         $this->medicineCode = null;
         $this->medicineCc = null;
+        $this->medicineTotalCc = null;
         $this->medicineCost = null;
         $this->medicineMarketId = null;
+        $this->medicineDiscarded = false;
         $this->medicinePicture = null;
         $this->medicine = null;
         $this->resetErrorBag();
@@ -151,8 +161,10 @@ class MedicineIndex extends Component
         $this->medicine->expiration_date = $this->medicineExpirationDate ? \Carbon\Carbon::make($this->medicineExpirationDate) : null;
         $this->medicine->code = $this->medicineCode;
         $this->medicine->cc = $this->medicineCc;
+        $this->medicine->total_cc = $this->medicineTotalCc;
         $this->medicine->cost = $this->medicineCost;
         $this->medicine->market_id = $this->medicineMarketId;
+        $this->medicine->discarded = $this->medicineDiscarded;
 
         if ($this->medicinePicture) {
             if ($this->editing && $this->medicine->picture) {
@@ -240,12 +252,26 @@ class MedicineIndex extends Component
         $this->loadSelectData();
     }
 
+    public function viewHistories($medicineId): void
+    {
+        $this->selectedMedicineForHistories = Medicine::with(['histories' => function($query) use ($medicineId) {
+            $query->orderBy('date', 'desc')
+                  ->with(['cowType', 'cows'])
+                  ->withPivot('cc');
+        }])->findOrFail($medicineId);
+        
+        $this->authorize('view', $this->selectedMedicineForHistories);
+        $this->showingHistoriesModal = true;
+    }
+    
     public function closeModals(): void
     {
         $this->showingModal = false;
         $this->showingViewModal = false;
+        $this->showingHistoriesModal = false;
         $this->showingManufacturerModal = false;
         $this->showingMarketModal = false;
+        $this->selectedMedicineForHistories = null;
         $this->resetMedicineForm();
     }
 

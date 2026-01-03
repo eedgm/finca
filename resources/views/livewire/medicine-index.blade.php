@@ -56,6 +56,9 @@
                         @lang('crud.medicines.inputs.cc')
                     </th>
                     <th class="px-4 py-3 text-right">
+                        @lang('crud.medicines.inputs.total_cc')
+                    </th>
+                    <th class="px-4 py-3 text-right">
                         @lang('crud.medicines.inputs.cost')
                     </th>
                     <th class="px-4 py-3 text-left">
@@ -83,6 +86,9 @@
                         {{ $medicine->code ?? '-' }}
                     </td>
                     <td class="px-4 py-3 text-right">
+                        {{ $medicine->total_cc ?? '-' }}
+                    </td>
+                    <td class="px-4 py-3 text-right">
                         {{ $medicine->cc ?? '-' }}
                     </td>
                     <td class="px-4 py-3 text-right">
@@ -102,6 +108,15 @@
                     </td>
                     <td class="px-4 py-3 text-center" style="width: 134px;">
                         <div role="group" aria-label="Row Actions" class="relative inline-flex align-middle">
+                            @can('view-any', App\Models\History::class)
+                            <button
+                                wire:click="viewHistories({{ $medicine->id }})"
+                                class="mr-1 button"
+                                title="Ver Histories"
+                            >
+                                <i class="icon ion-md-book"></i>
+                            </button>
+                            @endcan
                             @can('view', $medicine)
                             <button
                                 wire:click="viewMedicine({{ $medicine->id }})"
@@ -225,12 +240,32 @@
                 <x-inputs.group class="w-full">
                     <x-inputs.number
                         name="medicineCc"
-                        label="CC"
+                        label="CC (Unidad)"
                         wire:model="medicineCc"
                         step="0.01"
                         placeholder="CC"
                     ></x-inputs.number>
                     @error('medicineCc') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </x-inputs.group>
+
+                <x-inputs.group class="w-full">
+                    <x-inputs.number
+                        name="medicineTotalCc"
+                        label="Total CC Disponible"
+                        wire:model="medicineTotalCc"
+                        step="0.01"
+                        placeholder="Total CC Disponible"
+                    ></x-inputs.number>
+                    @error('medicineTotalCc') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </x-inputs.group>
+
+                <x-inputs.group class="w-full">
+                    <x-inputs.checkbox
+                        name="medicineDiscarded"
+                        label="Desechada"
+                        wire:model="medicineDiscarded"
+                    ></x-inputs.checkbox>
+                    @error('medicineDiscarded') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </x-inputs.group>
 
                 <x-inputs.group class="w-full">
@@ -498,6 +533,88 @@
             >
                 <i class="mr-1 icon ion-md-save"></i>
                 Guardar
+            </button>
+        </div>
+    </x-modal>
+
+    <!-- Modal para Ver Historiales de la Medicina -->
+    <x-modal wire:model="showingHistoriesModal">
+        <div class="px-6 py-4 max-h-[90vh] overflow-y-auto">
+            <div class="text-lg font-bold mb-4">
+                Historiales de: {{ $selectedMedicineForHistories->name ?? '' }}
+            </div>
+
+            @if($selectedMedicineForHistories && $selectedMedicineForHistories->histories->count() > 0)
+            <div class="space-y-4">
+                @foreach($selectedMedicineForHistories->histories as $history)
+                <div class="border border-gray-200 rounded-lg p-4 bg-white">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm">
+                                <strong>Fecha:</strong> 
+                                {{ $history->date ? $history->date->format('d/m/Y') : '-' }}
+                            </p>
+                            @if($history->weight)
+                            <p class="text-sm">
+                                <strong>Peso:</strong> {{ $history->weight }} kg
+                            </p>
+                            @endif
+                            @if($history->cowType)
+                            <p class="text-sm">
+                                <strong>Tipo:</strong> {{ $history->cowType->name }}
+                            </p>
+                            @endif
+                        </div>
+                        <div>
+                            @if($history->cows && $history->cows->count() > 0)
+                            <p class="text-sm">
+                                <strong>Vacas:</strong>
+                                @foreach($history->cows as $cow)
+                                    {{ $cow->number ? '#' . $cow->number : '' }}{{ $cow->name ? ' - ' . $cow->name : '' }}
+                                    @if(!$loop->last), @endif
+                                @endforeach
+                            </p>
+                            @endif
+                            @if($history->pivot->cc)
+                            <p class="text-sm">
+                                <strong>CC Usado:</strong> {{ $history->pivot->cc }} cc
+                            </p>
+                            @endif
+                        </div>
+                    </div>
+                    @if($history->comments)
+                    <div class="mt-2">
+                        <p class="text-sm">
+                            <strong>Comentarios:</strong> {{ $history->comments }}
+                        </p>
+                    </div>
+                    @endif
+                    @if($history->picture)
+                    <div class="mt-2">
+                        <x-partials.thumbnail
+                            src="{{ \Storage::url($history->picture) }}"
+                            size="150"
+                        />
+                    </div>
+                    @endif
+                </div>
+                @endforeach
+            </div>
+            @else
+            <div class="text-center py-8">
+                <p class="text-gray-500">No hay historiales registrados para esta medicina.</p>
+            </div>
+            @endif
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 flex justify-end">
+            <button
+                type="button"
+                class="button"
+                wire:click="closeModals"
+            >
+                <i class="mr-1 icon ion-md-close"></i>
+                Cerrar
             </button>
         </div>
     </x-modal>

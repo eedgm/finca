@@ -246,6 +246,8 @@ return [
             'expiration_date' => 'Expiration Date',
             'code' => 'Code',
             'cc' => 'Cc',
+            'total_cc' => 'Total CC',
+            'discarded' => 'Discarded',
             'cost' => 'Cost',
             'market_id' => 'Market',
         ],

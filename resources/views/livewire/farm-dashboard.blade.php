@@ -26,6 +26,26 @@
                 @endcan
             </div>
         </div>
+        
+        @if(isset($exhaustedMedicines) && $exhaustedMedicines->count() > 0)
+        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <h4 class="text-sm font-semibold text-red-800 mb-2">
+                <i class="icon ion-md-warning"></i> Medicinas Agotadas o Desechadas
+            </h4>
+            <div class="flex flex-wrap gap-2">
+                @foreach($exhaustedMedicines as $medicine)
+                <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">
+                    {{ $medicine->name }}
+                    @if($medicine->discarded)
+                        (Desechada)
+                    @else
+                        (Agotada: {{ $medicine->total_cc ?? 0 }} cc)
+                    @endif
+                </span>
+                @endforeach
+            </div>
+        </div>
+        @endif
     </div>
 
     @if($cowsByType->isEmpty())
@@ -617,14 +637,29 @@
                         @if(!empty($selectedMedicines))
                         <div class="space-y-2 mt-2">
                             @foreach($selectedMedicines as $medicineId)
+                            @php
+                                $medicine = \App\Models\Medicine::find($medicineId);
+                                $availableCc = $medicine ? ($medicine->total_cc ?? 0) : 0;
+                            @endphp
                             <div class="flex items-center gap-2 p-2 bg-gray-50 rounded">
                                 <span class="flex-1 text-sm">{{ $medicinesForSelect[$medicineId] ?? 'N/A' }}</span>
+                                <div class="flex items-center gap-1">
+                                    <span class="text-xs text-gray-500">Disponible:</span>
+                                    <input
+                                        type="number"
+                                        wire:model="medicineTotalCc.{{ $medicineId }}"
+                                        step="0.01"
+                                        class="w-20 rounded border-gray-300 text-sm"
+                                        readonly
+                                    />
+                                </div>
                                 <input
                                     type="number"
                                     wire:model="medicineCc.{{ $medicineId }}"
-                                    placeholder="CC"
+                                    placeholder="CC a usar"
                                     step="0.01"
-                                    class="w-20 rounded border-gray-300 text-sm"
+                                    max="{{ $availableCc }}"
+                                    class="w-24 rounded border-gray-300 text-sm"
                                 />
                                 <button
                                     type="button"

@@ -51,6 +51,7 @@ class FarmDashboard extends Component
     public $selectedMedicines = [];
     public $medicineCc = [];
     public $selectedMedicine = null;
+    public $medicineTotalCc = []; // Store total available CC for each medicine
     
     // Gallery properties
     public $showingGallery = false;
@@ -102,7 +103,14 @@ class FarmDashboard extends Component
         $user = auth()->user();
         $this->farmsForSelect = $user->farms->pluck('name', 'id')->toArray();
         $this->cowTypesForSelect = CowType::pluck('name', 'id')->toArray();
-        $this->medicinesForSelect = Medicine::pluck('name', 'id')->toArray();
+        // Only load available medicines (total_cc > 0 and not discarded)
+        $this->medicinesForSelect = Medicine::where('discarded', false)
+            ->where(function($query) {
+                $query->where('total_cc', '>', 0)
+                      ->orWhereNull('total_cc');
+            })
+            ->pluck('name', 'id')
+            ->toArray();
         $this->loadParentsAndMothers();
     }
     
@@ -199,10 +207,14 @@ class FarmDashboard extends Component
         $this->resetHistoryForm();
         $cowGender = Cow::findOrFail($cowId)->gender;
         $this->cowTypesForSelect = CowType::where('gender', $cowGender)->pluck('name', 'id')->toArray();
+        
+        // Reload available medicines
+        $this->loadSelectData();
 
         $this->historyDate = now()->format('Y-m-d');
         $this->selectedMedicines = [];
         $this->medicineCc = [];
+        $this->medicineTotalCc = [];
         $this->showingHistoryModal = true;
     }
     
@@ -248,6 +260,7 @@ class FarmDashboard extends Component
         $this->history = null;
         $this->selectedMedicines = [];
         $this->medicineCc = [];
+        $this->medicineTotalCc = [];
         $this->resetErrorBag();
     }
     
@@ -441,13 +454,22 @@ class FarmDashboard extends Component
         $history->save();
         $history->cows()->attach($this->selectedCowId);
         
-        // Attach medicines if selected
+        // Attach medicines if selected and decrease inventory
         if (!empty($this->selectedMedicines)) {
             $medicinesData = [];
             foreach ($this->selectedMedicines as $medicineId) {
+                $ccUsed = $this->medicineCc[$medicineId] ?? 0;
                 $medicinesData[$medicineId] = [
-                    'cc' => $this->medicineCc[$medicineId] ?? null,
+                    'cc' => $ccUsed,
                 ];
+                
+                // Decrease total_cc from medicine inventory
+                $medicine = Medicine::findOrFail($medicineId);
+                if ($medicine->total_cc !== null) {
+                    $newTotal = max(0, ($medicine->total_cc ?? 0) - $ccUsed);
+                    $medicine->total_cc = $newTotal;
+                    $medicine->save();
+                }
             }
             $history->medicines()->attach($medicinesData);
         }
@@ -458,9 +480,18 @@ class FarmDashboard extends Component
     
     public function addMedicineToHistory($medicineId): void
     {
+        $medicine = Medicine::findOrFail($medicineId);
+        
+        // Check if medicine is available (not discarded and has total_cc > 0)
+        if ($medicine->discarded || ($medicine->total_cc !== null && $medicine->total_cc <= 0)) {
+            return; // Don't add if discarded or out of stock
+        }
+        
         if (!in_array($medicineId, $this->selectedMedicines)) {
             $this->selectedMedicines[] = $medicineId;
             $this->medicineCc[$medicineId] = null;
+            // Store current total_cc for this medicine
+            $this->medicineTotalCc[$medicineId] = $medicine->total_cc ?? 0;
         }
     }
     
@@ -571,8 +602,18 @@ class FarmDashboard extends Component
             });
         }
 
+        // Get exhausted medicines (total_cc = 0 or discarded = true)
+        $exhaustedMedicines = Medicine::where(function($query) {
+            $query->where('discarded', true)
+                  ->orWhere(function($q) {
+                      $q->whereNotNull('total_cc')
+                        ->where('total_cc', '<=', 0);
+                  });
+        })->get();
+        
         return view('livewire.farm-dashboard', [
             'cowsByType' => $cowsByType,
+            'exhaustedMedicines' => $exhaustedMedicines,
         ]);
     }
 }
