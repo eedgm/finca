@@ -71,7 +71,7 @@ class FarmDashboard extends Component
         'historyWeight' => ['nullable', 'numeric'],
         'historyCowTypeId' => ['nullable', 'exists:cow_types,id'],
         'historyComments' => ['nullable', 'max:255', 'string'],
-        'historyPicture' => ['image', 'max:1024', 'nullable'],
+        'historyPicture' => ['image', 'max:5000', 'nullable'],
         'selectedCowId' => ['required', 'exists:cows,id'],
     ];
 
