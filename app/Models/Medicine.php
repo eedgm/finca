@@ -40,6 +40,6 @@ class Medicine extends Model
 
     public function histories()
     {
-        return $this->belongsToMany(History::class);
+        return $this->belongsToMany(History::class)->withPivot('cc');
     }
 }

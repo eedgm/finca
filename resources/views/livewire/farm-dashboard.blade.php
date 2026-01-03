@@ -525,7 +525,11 @@
                         @if($prevHistory->medicines && $prevHistory->medicines->count() > 0)
                         <p class="text-xs text-gray-600">
                             <strong>Medicamentos:</strong> 
-                            {{ $prevHistory->medicines->pluck('name')->implode(', ') }}
+                            @foreach($prevHistory->medicines as $medicine)
+                                {{ $medicine->name }}
+                                @if($medicine->pivot->cc) ({{ $medicine->pivot->cc }} cc)@endif
+                                @if(!$loop->last), @endif
+                            @endforeach
                         </p>
                         @endif
                     </div>

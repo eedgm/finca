@@ -110,7 +110,9 @@ class FarmDashboard extends Component
 
     public function viewCow($cowId): void
     {
-        $this->cow = Cow::with(['farm', 'histories.cowType', 'histories.medicines'])->findOrFail($cowId);
+        $this->cow = Cow::with(['farm', 'histories.cowType', 'histories.medicines' => function($query) {
+            $query->withPivot('cc');
+        }])->findOrFail($cowId);
         $this->authorize('view', $this->cow);
         $this->showingViewCowModal = true;
     }
@@ -151,7 +153,9 @@ class FarmDashboard extends Component
             return collect();
         }
         
-        return Cow::with(['histories.cowType', 'histories.medicines'])
+        return Cow::with(['histories.cowType', 'histories.medicines' => function($query) {
+                $query->withPivot('cc');
+            }])
             ->findOrFail($this->selectedCowId)
             ->histories()
             ->orderBy('date', 'desc')
@@ -452,7 +456,9 @@ class FarmDashboard extends Component
             $farmIds = $farms->pluck('id');
             $cows = Cow::whereIn('farm_id', $farmIds)
                 ->with(['farm', 'histories' => function ($query) {
-                    $query->orderBy('date', 'desc')->with(['cowType', 'medicines']);
+                    $query->orderBy('date', 'desc')->with(['cowType', 'medicines' => function($medQuery) {
+                        $medQuery->withPivot('cc');
+                    }]);
                 }])
                 ->get();
             

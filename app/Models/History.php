@@ -32,7 +32,7 @@ class History extends Model
 
     public function medicines()
     {
-        return $this->belongsToMany(Medicine::class);
+        return $this->belongsToMany(Medicine::class)->withPivot('cc');
     }
 
     public function cows()
