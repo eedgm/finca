@@ -52,6 +52,9 @@
                                 <th class="px-4 py-3 text-left">
                                     @lang('crud.cow_types.inputs.name')
                                 </th>
+                                <th class="px-4 py-3 text-left">
+                                    @lang('crud.cow_types.inputs.gender')
+                                </th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -60,6 +63,9 @@
                             <tr class="hover:bg-gray-50">
                                 <td class="px-4 py-3 text-left">
                                     {{ $cowType->name ?? '-' }}
+                                </td>
+                                <td class="px-4 py-3 text-left">
+                                    {{ $cowType->gender ?? '-' }}
                                 </td>
                                 <td
                                     class="px-4 py-3 text-center"

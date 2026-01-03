@@ -11,7 +11,7 @@ class CowType extends Model
     use HasFactory;
     use Searchable;
 
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'gender'];
 
     protected $searchableFields = ['*'];
 

@@ -12,11 +12,11 @@ class CowTypeSeeder extends Seeder
      */
     public function run(): void
     {
-        CowType::create(['name' => 'Ternero']);
-        CowType::create(['name' => 'Ternera']);
-        CowType::create(['name' => 'Novillo']);
-        CowType::create(['name' => 'Novilla']);
-        CowType::create(['name' => 'Vaca']);
-        CowType::create(['name' => 'Toro']);
+        CowType::create(['name' => 'Ternero', 'gender' => 'male']);
+        CowType::create(['name' => 'Ternera', 'gender' => 'female']);
+        CowType::create(['name' => 'Novillo', 'gender' => 'male']);
+        CowType::create(['name' => 'Novilla', 'gender' => 'female']);
+        CowType::create(['name' => 'Vaca', 'gender' => 'female']);
+        CowType::create(['name' => 'Toro', 'gender' => 'male']);
     }
 }

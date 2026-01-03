@@ -57,10 +57,15 @@ class FarmDashboard extends Component
     public $galleryImages = [];
     public $currentImageIndex = 0;
     
+    // Filters modal
+    public $showingFiltersModal = false;
+    
     // Data for selects
     public $farmsForSelect = [];
     public $cowTypesForSelect = [];
     public $medicinesForSelect = [];
+    public $fathersForSelect = [];
+    public $mothersForSelect = [];
     
     // Search properties
     public $searchNumber = '';
@@ -71,8 +76,8 @@ class FarmDashboard extends Component
         'cowNumber' => ['nullable', 'numeric'],
         'cowName' => ['nullable', 'max:255', 'string'],
         'cowGender' => ['required', 'in:male,female'],
-        'cowParentId' => ['nullable', 'max:255'],
-        'cowMotherId' => ['nullable', 'max:255'],
+        'cowParentId' => ['nullable', 'exists:cows,id'],
+        'cowMotherId' => ['nullable', 'exists:cows,id'],
         'cowFarmId' => ['required', 'exists:farms,id'],
         'cowOwner' => ['nullable', 'max:255', 'string'],
         'cowSold' => ['required', 'boolean'],
@@ -98,6 +103,56 @@ class FarmDashboard extends Component
         $this->farmsForSelect = $user->farms->pluck('name', 'id')->toArray();
         $this->cowTypesForSelect = CowType::pluck('name', 'id')->toArray();
         $this->medicinesForSelect = Medicine::pluck('name', 'id')->toArray();
+        $this->loadParentsAndMothers();
+    }
+    
+    public function loadParentsAndMothers(): void
+    {
+        $user = auth()->user();
+        $farmIds = $user->farms->pluck('id');
+        
+        // Get Toro type ID
+        $toroType = CowType::where('name', 'Toro')->first();
+        // Get Vaca type ID
+        $vacaType = CowType::where('name', 'Vaca')->first();
+        
+        // Load fathers (cows with Toro in their latest history)
+        $this->fathersForSelect = [];
+        if ($toroType) {
+            $fathers = Cow::whereIn('farm_id', $farmIds)
+                ->with(['histories' => function($query) {
+                    $query->orderBy('date', 'desc')->with('cowType')->limit(1);
+                }])
+                ->get()
+                ->filter(function($cow) use ($toroType) {
+                    $latestHistory = $cow->histories()->latest()->first();
+                    return $latestHistory && $latestHistory->cow_type_id == $toroType->id;
+                });
+            
+            foreach ($fathers as $father) {
+                $label = ($father->number ? '#' . $father->number : '') . ($father->name ? ' - ' . $father->name : '');
+                $this->fathersForSelect[$father->id] = $label ?: 'Vaca #' . $father->id;
+            }
+        }
+        
+        // Load mothers (cows with Vaca in their latest history)
+        $this->mothersForSelect = [];
+        if ($vacaType) {
+            $mothers = Cow::whereIn('farm_id', $farmIds)
+                ->with(['histories' => function($query) {
+                    $query->orderBy('date', 'desc')->with('cowType')->limit(1);
+                }])
+                ->get()
+                ->filter(function($cow) use ($vacaType) {
+                    $latestHistory = $cow->histories()->latest()->first();
+                    return $latestHistory && $latestHistory->cow_type_id == $vacaType->id;
+                });
+            
+            foreach ($mothers as $mother) {
+                $label = ($mother->number ? '#' . $mother->number : '') . ($mother->name ? ' - ' . $mother->name : '');
+                $this->mothersForSelect[$mother->id] = $label ?: 'Vaca #' . $mother->id;
+            }
+        }
     }
 
     public function newCow(): void
@@ -134,6 +189,7 @@ class FarmDashboard extends Component
         $this->cowSold = $this->cow->sold;
         $this->cowBorn = $this->cow->born ? $this->cow->born->format('Y-m-d') : null;
         
+        $this->loadParentsAndMothers();
         $this->showingCowModal = true;
     }
 
@@ -141,6 +197,9 @@ class FarmDashboard extends Component
     {
         $this->selectedCowId = $cowId;
         $this->resetHistoryForm();
+        $cowGender = Cow::findOrFail($cowId)->gender;
+        $this->cowTypesForSelect = CowType::where('gender', $cowGender)->pluck('name', 'id')->toArray();
+
         $this->historyDate = now()->format('Y-m-d');
         $this->selectedMedicines = [];
         $this->medicineCc = [];
@@ -417,8 +476,19 @@ class FarmDashboard extends Component
         $this->showingViewCowModal = false;
         $this->showingHistoryModal = false;
         $this->showingGallery = false;
+        $this->showingFiltersModal = false;
         $this->resetCowForm();
         $this->resetHistoryForm();
+    }
+    
+    public function openFiltersModal(): void
+    {
+        $this->showingFiltersModal = true;
+    }
+    
+    public function closeFiltersModal(): void
+    {
+        $this->showingFiltersModal = false;
     }
 
     public function updatedSearchNumber(): void
@@ -491,7 +561,7 @@ class FarmDashboard extends Component
             // Group cows by cow_type from last history
             $cowsByType = $cows->groupBy(function ($cow) {
                 // Get the most recent history
-                $lastHistory = $cow->histories->first();
+                $lastHistory = $cow->histories()->latest()->first();
                 
                 if ($lastHistory && $lastHistory->cowType) {
                     return $lastHistory->cowType->name;

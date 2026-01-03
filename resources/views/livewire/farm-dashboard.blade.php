@@ -6,7 +6,15 @@
                     Vacas por Tipo
                 </h3>
             </div>
-            <div class="md:w-1/2 text-right">
+            <div class="md:w-1/2 text-right flex gap-2 justify-end">
+                <button
+                    wire:click="openFiltersModal"
+                    class="button"
+                    type="button"
+                >
+                    <i class="mr-1 icon ion-md-funnel"></i>
+                    Filtros
+                </button>
                 @can('create', App\Models\Cow::class)
                 <button
                     wire:click="newCow"
@@ -16,74 +24,6 @@
                     Agregar Vaca
                 </button>
                 @endcan
-            </div>
-        </div>
-
-        <!-- Search Filters -->
-        <div class="bg-gray-50 p-4 rounded-lg mb-4" x-data="{ filtersOpen: false }">
-            <div class="flex items-center justify-between mb-2 md:hidden">
-                <h4 class="text-sm font-medium text-gray-700">Filtros de Búsqueda</h4>
-                <button
-                    @click="filtersOpen = !filtersOpen"
-                    class="p-2 text-gray-600 hover:text-gray-800"
-                    type="button"
-                >
-                    <i class="text-xl bx" :class="filtersOpen ? 'bx-chevron-up' : 'bx-chevron-down'"></i>
-                </button>
-            </div>
-            <div 
-                class="grid grid-cols-1 md:grid-cols-4 gap-4"
-                :class="filtersOpen || window.innerWidth >= 768 ? 'block' : 'hidden'"
-                x-show="filtersOpen || window.innerWidth >= 768"
-            >
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Buscar por Número
-                    </label>
-                    <x-inputs.text
-                        name="searchNumber"
-                        wire:model.debounce.300ms="searchNumber"
-                        placeholder="Número de vaca..."
-                        autocomplete="off"
-                    ></x-inputs.text>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Filtrar por Sexo
-                    </label>
-                    <x-inputs.select
-                        name="searchGender"
-                        wire:model="searchGender"
-                    >
-                        <option value="">Todos</option>
-                        <option value="male">Macho</option>
-                        <option value="female">Hembra</option>
-                    </x-inputs.select>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Buscar en Historial
-                    </label>
-                    <x-inputs.text
-                        name="searchHistory"
-                        wire:model.debounce.300ms="searchHistory"
-                        placeholder="Comentarios, tipo, fecha..."
-                        autocomplete="off"
-                    ></x-inputs.text>
-                </div>
-
-                <div class="flex items-end">
-                    <button
-                        wire:click="clearSearch"
-                        class="button w-full"
-                        type="button"
-                    >
-                        <i class="mr-1 icon ion-md-close"></i>
-                        Limpiar Búsqueda
-                    </button>
-                </div>
             </div>
         </div>
     </div>
@@ -121,6 +61,12 @@
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Historial
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Foto
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Número
                                         </th>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -135,9 +81,6 @@
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Nacimiento
                                         </th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Foto
-                                        </th>
                                         <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Acciones
                                         </th>
@@ -146,6 +89,34 @@
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     @foreach($cows as $cow)
                                     <tr class="hover:bg-gray-50">
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                            @if($cow->histories && $cow->histories->count() > 0)
+                                                <span 
+                                                    class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 cursor-pointer hover:bg-green-900 hover:text-white"
+                                                    wire:click="newHistory({{ $cow->id }})"
+                                                    >
+                                                    {{ $cow->histories->count() }}
+                                                </span>
+                                            @else
+                                                <span 
+                                                    class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 cursor-pointer hover:bg-red-900 hover:text-white"
+                                                    wire:click="newHistory({{ $cow->id }})"
+                                                    >
+                                                    -
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                            @if($cow->picture)
+                                                <x-partials.thumbnail
+                                                    src="{{ \Storage::url($cow->picture) }}"
+                                                />
+                                            @else
+                                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                    -
+                                                </span>
+                                            @endif
+                                        </td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                                             {{ $cow->number ?? '-' }}
                                         </td>
@@ -162,15 +133,6 @@
                                         </td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                                             {{ $cow->born ? $cow->born->format('d/m/Y') : '-' }}
-                                        </td>
-                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                                            @if($cow->picture)
-                                                <x-partials.thumbnail
-                                                    src="{{ \Storage::url($cow->picture) }}"
-                                                />
-                                            @else
-                                                <span class="text-gray-400">-</span>
-                                            @endif
                                         </td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-center">
                                             <div class="flex justify-center space-x-2">
@@ -255,24 +217,30 @@
                 </x-inputs.group>
 
                 <x-inputs.group class="w-full">
-                    <x-inputs.text
+                    <x-inputs.select
                         name="cowParentId"
-                        label="ID Padre"
+                        label="Padre (Toro)"
                         wire:model="cowParentId"
-                        maxlength="255"
-                        placeholder="ID Padre"
-                    ></x-inputs.text>
+                    >
+                        <option value="">Seleccione un Padre</option>
+                        @foreach($fathersForSelect as $value => $label)
+                        <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </x-inputs.select>
                     @error('cowParentId') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </x-inputs.group>
 
                 <x-inputs.group class="w-full">
-                    <x-inputs.text
+                    <x-inputs.select
                         name="cowMotherId"
-                        label="ID Madre"
+                        label="Madre (Vaca)"
                         wire:model="cowMotherId"
-                        maxlength="255"
-                        placeholder="ID Madre"
-                    ></x-inputs.text>
+                    >
+                        <option value="">Seleccione una Madre</option>
+                        @foreach($mothersForSelect as $value => $label)
+                        <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </x-inputs.select>
                     @error('cowMotherId') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </x-inputs.group>
 
@@ -782,6 +750,73 @@
                 <p class="text-gray-500">No hay imágenes disponibles</p>
             </div>
             @endif
+        </div>
+    </x-modal>
+
+    <!-- Modal para Filtros de Búsqueda -->
+    <x-modal wire:model="showingFiltersModal">
+        <div class="px-6 py-4">
+            <div class="text-lg font-bold mb-4">Filtros de Búsqueda</div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Buscar por Número
+                    </label>
+                    <x-inputs.text
+                        name="searchNumber"
+                        wire:model.debounce.300ms="searchNumber"
+                        placeholder="Número de vaca..."
+                        autocomplete="off"
+                    ></x-inputs.text>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Filtrar por Sexo
+                    </label>
+                    <x-inputs.select
+                        name="searchGender"
+                        wire:model="searchGender"
+                    >
+                        <option value="">Todos</option>
+                        <option value="male">Macho</option>
+                        <option value="female">Hembra</option>
+                    </x-inputs.select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Buscar en Historial
+                    </label>
+                    <x-inputs.text
+                        name="searchHistory"
+                        wire:model.debounce.300ms="searchHistory"
+                        placeholder="Comentarios, tipo, fecha..."
+                        autocomplete="off"
+                    ></x-inputs.text>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 flex justify-between">
+            <button
+                type="button"
+                wire:click="clearSearch"
+                class="button"
+            >
+                <i class="mr-1 icon ion-md-close"></i>
+                Limpiar Búsqueda
+            </button>
+
+            <button
+                type="button"
+                class="button button-primary"
+                wire:click="closeFiltersModal"
+            >
+                <i class="mr-1 icon ion-md-checkmark"></i>
+                Aplicar Filtros
+            </button>
         </div>
     </x-modal>
 </div>

@@ -80,6 +80,7 @@ return [
         'show_title' => 'Show CowType',
         'inputs' => [
             'name' => 'Name',
+            'gender' => 'Gender',
         ],
     ],
 

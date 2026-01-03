@@ -21,6 +21,7 @@ class CowTypeStoreRequest extends FormRequest
     {
         return [
             'name' => ['required', 'max:255', 'string'],
+            'gender' => ['required', 'in:male,female'],
         ];
     }
 }
