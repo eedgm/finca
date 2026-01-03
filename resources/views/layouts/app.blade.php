@@ -25,7 +25,25 @@
         @livewireStyles
     </head>
     <body class="h-full overflow-x-hidden font-sans antialiased bg-gray-100">
-        <div class="flex bg-gray-300" x-data="{ isSidebarExpanded: $persist(true) }">
+        <div class="flex bg-gray-300" x-data="{
+            isSidebarExpanded: $persist(false),
+            init() {
+                // Set initial value based on screen size and persistence
+                const persistedKey = 'alpine:persist:isSidebarExpanded';
+                const persisted = localStorage.getItem(persistedKey);
+                
+                if (persisted === null) {
+                    // First time: hidden on mobile, expanded on desktop
+                    this.isSidebarExpanded = window.innerWidth >= 768;
+                } else if (window.innerWidth < 768) {
+                    // On mobile, always start hidden
+                    this.isSidebarExpanded = false;
+                } else {
+                    // On desktop, use persisted value
+                    this.isSidebarExpanded = persisted === 'true';
+                }
+            }
+        }">
             <x-dashboard.sidebar />
 
             <div class="z-10 flex flex-col flex-1 w-full">
