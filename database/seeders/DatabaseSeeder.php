@@ -20,6 +20,8 @@ class DatabaseSeeder extends Seeder
                 'password' => \Hash::make('admin'),
             ]);
 
+        $this->call(PermissionsSeeder::class);
+
         // $this->call(CowSeeder::class);
         $this->call(CowTypeSeeder::class);
         // $this->call(FarmSeeder::class);

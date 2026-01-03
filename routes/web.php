@@ -11,6 +11,8 @@ use App\Http\Controllers\CowTypeController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\MedicineController;
 use App\Http\Controllers\ManufacturerController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\PermissionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,4 +45,6 @@ Route::prefix('/')
         Route::resource('medicines', MedicineController::class);
         Route::resource('solds', SoldController::class);
         Route::resource('users', UserController::class);
+        Route::resource('roles', RoleController::class);
+        Route::resource('permissions', PermissionController::class);
     });

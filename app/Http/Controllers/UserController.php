@@ -74,7 +74,12 @@ class UserController extends Controller
     {
         $this->authorize('update', $user);
 
-        return view('app.users.edit', compact('user'));
+        $roles = \Spatie\Permission\Models\Role::all();
+        $permissions = \Spatie\Permission\Models\Permission::all();
+        $userRoles = $user->roles->pluck('name')->toArray();
+        $userPermissions = $user->permissions->pluck('name')->toArray();
+
+        return view('app.users.edit', compact('user', 'roles', 'permissions', 'userRoles', 'userPermissions'));
     }
 
     /**
@@ -95,6 +100,20 @@ class UserController extends Controller
         }
 
         $user->update($validated);
+
+        // Sync roles
+        if ($request->has('roles')) {
+            $user->syncRoles($request->roles);
+        } else {
+            $user->roles()->detach();
+        }
+
+        // Sync permissions
+        if ($request->has('permissions')) {
+            $user->syncPermissions($request->permissions);
+        } else {
+            $user->permissions()->detach();
+        }
 
         return redirect()
             ->route('users.edit', $user)
