@@ -7,6 +7,8 @@
 
         <title>@yield('title', 'Mi finca')</title>
 
+        <link rel="icon" href="{{ asset('mi-finca.ico') }}" type="image/x-icon">
+
         <!-- Fonts -->
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap">
 

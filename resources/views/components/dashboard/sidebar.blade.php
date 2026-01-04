@@ -6,7 +6,7 @@
         href="{{ route('dashboard') }}"
         class="flex items-center h-20 px-4 overflow-hidden bg-green-900 hover:text-gray-100 hover:bg-opacity-50 focus:outline-none focus:text-gray-100 focus:bg-opacity-50"
         >
-        <i class='text-2xl bx bxs-landscape' ></i>
+        <img src="{{ asset('mi-finca.webp') }}" alt="Mi Finca" class="w-16 h-auto">
         <span class="ml-2 text-lg font-medium duration-300 ease-in-out" :class="isSidebarExpanded ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'">Mi Finca</span>
     </a>
     <nav

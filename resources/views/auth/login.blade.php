@@ -1,7 +1,7 @@
 <x-guest-layout>
     <x-authentication-card>
         <x-slot name="logo">
-            <i class='text-red-500 text-7xl bx bxs-landscape' ></i>
+            <img src="{{ asset('mi-finca.webp') }}" alt="Mi Finca" class="w-48 h-auto">
         </x-slot>
 
         <x-validation-errors class="mb-4" />
