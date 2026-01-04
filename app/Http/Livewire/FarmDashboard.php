@@ -102,7 +102,7 @@ class FarmDashboard extends Component
     {
         $user = auth()->user();
         $this->farmsForSelect = $user->farms->pluck('name', 'id')->toArray();
-        $this->cowTypesForSelect = CowType::pluck('name', 'id')->toArray();
+        // $this->cowTypesForSelect = CowType::pluck('name', 'id')->toArray();
         // Only load available medicines (total_cc > 0 and not discarded)
         $this->medicinesForSelect = Medicine::where('discarded', false)
             ->where(function($query) {
@@ -205,9 +205,17 @@ class FarmDashboard extends Component
     {
         $this->selectedCowId = $cowId;
         $this->resetHistoryForm();
-        $cowGender = Cow::findOrFail($cowId)->gender;
-        $this->cowTypesForSelect = CowType::where('gender', $cowGender)->pluck('name', 'id')->toArray();
-        
+        $cow = Cow::findOrFail($cowId);
+        $this->cowTypesForSelect = CowType::where('gender', $cow->gender)->pluck('name', 'id')->toArray();
+        // obtener el tipo de vaca del ultimo historial de la vaca
+        $lastHistory = $cow->histories()->latest()->first();
+        if ($lastHistory) {
+            $this->historyCowTypeId = $lastHistory->cow_type_id;
+            $this->historyWeight = $lastHistory->weight;
+        } else {
+            $this->historyCowTypeId = null;
+            $this->historyWeight = null;
+        }
         // Reload available medicines
         $this->loadSelectData();
 
@@ -229,7 +237,7 @@ class FarmDashboard extends Component
             }])
             ->findOrFail($this->selectedCowId)
             ->histories()
-            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
             ->get();
     }
 
@@ -459,19 +467,34 @@ class FarmDashboard extends Component
             $medicinesData = [];
             foreach ($this->selectedMedicines as $medicineId) {
                 $ccUsed = $this->medicineCc[$medicineId] ?? 0;
-                $medicinesData[$medicineId] = [
-                    'cc' => $ccUsed,
-                ];
                 
-                // Decrease total_cc from medicine inventory
+                // Validate that CC used doesn't exceed available
                 $medicine = Medicine::findOrFail($medicineId);
-                if ($medicine->total_cc !== null) {
-                    $newTotal = max(0, ($medicine->total_cc ?? 0) - $ccUsed);
-                    $medicine->total_cc = $newTotal;
-                    $medicine->save();
+                if ($medicine->total_cc !== null && $ccUsed > 0) {
+                    $availableCc = $medicine->total_cc ?? 0;
+                    if ($ccUsed > $availableCc) {
+                        $this->addError('medicineCc.' . $medicineId, 
+                            "La cantidad de CC ({$ccUsed}) excede el disponible ({$availableCc} cc) para {$medicine->name}.");
+                        return;
+                    }
+                }
+                
+                if ($ccUsed > 0) {
+                    $medicinesData[$medicineId] = [
+                        'cc' => $ccUsed,
+                    ];
+                    
+                    // Decrease total_cc from medicine inventory
+                    if ($medicine->total_cc !== null) {
+                        $newTotal = max(0, ($medicine->total_cc ?? 0) - $ccUsed);
+                        $medicine->total_cc = $newTotal;
+                        $medicine->save();
+                    }
                 }
             }
-            $history->medicines()->attach($medicinesData);
+            if (!empty($medicinesData)) {
+                $history->medicines()->attach($medicinesData);
+            }
         }
 
         $this->showingHistoryModal = false;
@@ -499,6 +522,31 @@ class FarmDashboard extends Component
     {
         $this->selectedMedicines = array_values(array_filter($this->selectedMedicines, fn($id) => $id != $medicineId));
         unset($this->medicineCc[$medicineId]);
+        unset($this->medicineTotalCc[$medicineId]);
+        $this->resetErrorBag('medicineCc.' . $medicineId);
+    }
+    
+    public function updatedMedicineCc($value, $key): void
+    {
+        // Validate in real-time that CC doesn't exceed available
+        // $key format: "medicineCc.123" where 123 is the medicine ID
+        if ($value && $value > 0) {
+            $medicineId = (int) str_replace('medicineCc.', '', $key);
+            $medicine = Medicine::find($medicineId);
+            if ($medicine && $medicine->total_cc !== null) {
+                $availableCc = $medicine->total_cc ?? 0;
+                if ($value > $availableCc) {
+                    $this->addError('medicineCc.' . $medicineId, 
+                        "La cantidad de CC ({$value}) excede el disponible ({$availableCc} cc).");
+                } else {
+                    $this->resetErrorBag('medicineCc.' . $medicineId);
+                }
+            }
+        } else {
+            // Clear error if value is empty or 0
+            $medicineId = (int) str_replace('medicineCc.', '', $key);
+            $this->resetErrorBag('medicineCc.' . $medicineId);
+        }
     }
 
     public function closeModals(): void

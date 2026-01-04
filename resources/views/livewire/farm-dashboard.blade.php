@@ -635,39 +635,87 @@
                             </select>
                         </div>
                         @if(!empty($selectedMedicines))
-                        <div class="space-y-2 mt-2">
+                        <div class="space-y-3 mt-3">
                             @foreach($selectedMedicines as $medicineId)
                             @php
                                 $medicine = \App\Models\Medicine::find($medicineId);
                                 $availableCc = $medicine ? ($medicine->total_cc ?? 0) : 0;
+                                $usedCc = $medicineCc[$medicineId] ?? 0;
+                                $remainingCc = $availableCc - $usedCc;
                             @endphp
-                            <div class="flex items-center gap-2 p-2 bg-gray-50 rounded">
-                                <span class="flex-1 text-sm">{{ $medicinesForSelect[$medicineId] ?? 'N/A' }}</span>
-                                <div class="flex items-center gap-1">
-                                    <span class="text-xs text-gray-500">Disponible:</span>
-                                    <input
-                                        type="number"
-                                        wire:model="medicineTotalCc.{{ $medicineId }}"
-                                        step="0.01"
-                                        class="w-20 rounded border-gray-300 text-sm"
-                                        readonly
-                                    />
+                            <div class="relative p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 {{ $errors->has('medicineCc.' . $medicineId) ? 'border-red-400 bg-red-50' : 'border-blue-200' }} shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i class="icon ion-md-medical text-blue-600 text-lg"></i>
+                                            <h4 class="font-semibold text-gray-800 text-sm truncate">
+                                                {{ $medicinesForSelect[$medicineId] ?? 'N/A' }}
+                                            </h4>
+                                        </div>
+                                        
+                                        <div class="grid grid-cols-2 gap-3 mb-3">
+                                            <div class="bg-white rounded-md p-2 border border-gray-200">
+                                                <p class="text-xs text-gray-500 mb-1">Disponible</p>
+                                                <p class="text-sm font-bold text-green-600">
+                                                    {{ number_format($medicineTotalCc[$medicineId] ?? 0, 2) }} cc
+                                                </p>
+                                            </div>
+                                            @if($usedCc > 0)
+                                            <div class="bg-white rounded-md p-2 border border-gray-200">
+                                                <p class="text-xs text-gray-500 mb-1">Restante</p>
+                                                <p class="text-sm font-bold {{ $remainingCc >= 0 ? 'text-blue-600' : 'text-red-600' }}">
+                                                    {{ number_format($remainingCc, 2) }} cc
+                                                </p>
+                                            </div>
+                                            @endif
+                                        </div>
+                                        
+                                        <div class="flex flex-col">
+                                            <label class="text-xs font-medium text-gray-700 mb-1">
+                                                Cantidad a usar (cc)
+                                            </label>
+                                            <div class="relative">
+                                                <input
+                                                    type="number"
+                                                    wire:model="medicineCc.{{ $medicineId }}"
+                                                    placeholder="0.00"
+                                                    step="0.01"
+                                                    min="0"
+                                                    max="{{ $availableCc }}"
+                                                    class="w-full px-3 py-2 rounded-md border-2 {{ $errors->has('medicineCc.' . $medicineId) ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200' }} text-sm font-medium focus:outline-none focus:ring-2 transition-colors"
+                                                />
+                                                @if($usedCc > 0 && $availableCc > 0)
+                                                <div class="mt-2">
+                                                    <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                                        <div 
+                                                            class="h-full rounded-full transition-all duration-300 {{ $remainingCc >= 0 ? 'bg-gradient-to-r from-green-400 to-green-600' : 'bg-gradient-to-r from-red-400 to-red-600' }}"
+                                                            style="width: {{ min(100, ($usedCc / $availableCc) * 100) }}%"
+                                                        ></div>
+                                                    </div>
+                                                    <p class="text-xs text-gray-500 mt-1">
+                                                        {{ number_format(($usedCc / $availableCc) * 100, 1) }}% del total disponible
+                                                    </p>
+                                                </div>
+                                                @endif
+                                            </div>
+                                            @error('medicineCc.' . $medicineId)
+                                            <div class="mt-2 flex items-center gap-1 text-red-600 text-xs">
+                                                <i class="icon ion-md-alert"></i>
+                                                <span>{{ $message }}</span>
+                                            </div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    
+                                    <button
+                                        type="button"
+                                        wire:click="removeMedicineFromHistory({{ $medicineId }})"
+                                        class="flex-shrink-0 p-2 text-red-500 hover:text-white hover:bg-red-500 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-300"
+                                        title="Eliminar medicamento"
+                                    >
+                                        <i class="icon ion-md-close text-lg"></i>
+                                    </button>
                                 </div>
-                                <input
-                                    type="number"
-                                    wire:model="medicineCc.{{ $medicineId }}"
-                                    placeholder="CC a usar"
-                                    step="0.01"
-                                    max="{{ $availableCc }}"
-                                    class="w-24 rounded border-gray-300 text-sm"
-                                />
-                                <button
-                                    type="button"
-                                    wire:click="removeMedicineFromHistory({{ $medicineId }})"
-                                    class="text-red-600 hover:text-red-800"
-                                >
-                                    <i class="icon ion-md-close"></i>
-                                </button>
                             </div>
                             @endforeach
                         </div>
