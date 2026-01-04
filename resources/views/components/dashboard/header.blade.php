@@ -29,7 +29,7 @@
                     href="{{ route('dashboard') }}"
                     class="flex items-center px-4 overflow-hidden text-white hover:text-gray-100 hover:bg-opacity-50"
                     >
-                    <img src="{{ asset('mi-finca.webp') }}" alt="Mi Finca" class="w-6 h-6">
+                    <img src="{{ asset('mi-finca.webp') }}" alt="Mi Finca" class="w-12 h-auto">
                     <span class="ml-2 text-lg font-medium duration-300 ease-in-out">Mi Finca</span>
                 </a>
             </div>
