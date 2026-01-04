@@ -108,9 +108,15 @@
                                         </td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                                             @if($cow->picture)
-                                                <x-partials.thumbnail
-                                                    src="{{ \Storage::url($cow->picture) }}"
-                                                />
+                                                <button
+                                                    type="button"
+                                                    wire:click="zoomImage('{{ \Storage::url($cow->picture) }}', '{{ $cow->name ?? 'Vaca #' . ($cow->number ?? $cow->id) }}')"
+                                                    class="cursor-pointer hover:opacity-80 transition-opacity"
+                                                >
+                                                    <x-partials.thumbnail
+                                                        src="{{ \Storage::url($cow->picture) }}"
+                                                    />
+                                                </button>
                                             @else
                                                 <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
                                                     -
@@ -879,6 +885,36 @@
             >
                 <i class="mr-1 icon ion-md-checkmark"></i>
                 Aplicar Filtros
+            </button>
+        </div>
+    </x-modal>
+
+    <!-- Modal para Zoom de Imagen -->
+    <x-modal wire:model="showingImageZoom">
+        <div class="px-6 py-4">
+            @if($zoomedImageTitle)
+            <div class="text-lg font-bold mb-4">{{ $zoomedImageTitle }}</div>
+            @endif
+            
+            <div class="flex justify-center items-center max-h-[85vh] overflow-auto">
+                @if($zoomedImageUrl)
+                <img
+                    src="{{ $zoomedImageUrl }}"
+                    alt="{{ $zoomedImageTitle }}"
+                    class="max-w-full max-h-[80vh] object-contain rounded-lg shadow-lg"
+                />
+                @endif
+            </div>
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 flex justify-end">
+            <button
+                type="button"
+                class="button"
+                wire:click="closeImageZoom"
+            >
+                <i class="mr-1 icon ion-md-close"></i>
+                Cerrar
             </button>
         </div>
     </x-modal>

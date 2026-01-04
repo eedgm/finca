@@ -58,6 +58,11 @@ class FarmDashboard extends Component
     public $galleryImages = [];
     public $currentImageIndex = 0;
     
+    // Image zoom modal
+    public $showingImageZoom = false;
+    public $zoomedImageUrl = '';
+    public $zoomedImageTitle = '';
+    
     // Filters modal
     public $showingFiltersModal = false;
     
@@ -322,6 +327,20 @@ class FarmDashboard extends Component
         $this->showingGallery = false;
         $this->galleryImages = [];
         $this->currentImageIndex = 0;
+    }
+    
+    public function zoomImage($imageUrl, $title = ''): void
+    {
+        $this->zoomedImageUrl = $imageUrl;
+        $this->zoomedImageTitle = $title;
+        $this->showingImageZoom = true;
+    }
+    
+    public function closeImageZoom(): void
+    {
+        $this->showingImageZoom = false;
+        $this->zoomedImageUrl = '';
+        $this->zoomedImageTitle = '';
     }
     
     /**
@@ -621,6 +640,7 @@ class FarmDashboard extends Component
         $this->showingHistoryModal = false;
         $this->showingGallery = false;
         $this->showingFiltersModal = false;
+        $this->showingImageZoom = false;
         $this->resetCowForm();
         $this->resetHistoryForm();
     }
