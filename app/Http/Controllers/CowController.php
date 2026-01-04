@@ -31,6 +31,16 @@ class CowController extends Controller
     }
 
     /**
+     * Display the genealogy tree.
+     */
+    public function genealogy(Request $request): View
+    {
+        $this->authorize('view-any', Cow::class);
+
+        return view('app.cows.genealogy');
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create(Request $request): View

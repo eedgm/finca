@@ -51,4 +51,24 @@ class Cow extends Model
     {
         return $this->belongsTo(CowType::class);
     }
+
+    public function parent()
+    {
+        return $this->belongsTo(Cow::class, 'parent_id');
+    }
+
+    public function mother()
+    {
+        return $this->belongsTo(Cow::class, 'mother_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(Cow::class, 'parent_id');
+    }
+
+    public function childrenByMother()
+    {
+        return $this->hasMany(Cow::class, 'mother_id');
+    }
 }

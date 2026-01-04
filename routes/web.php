@@ -37,6 +37,7 @@ Route::prefix('/')
     ->middleware(['auth:sanctum', 'verified'])
     ->group(function () {
         Route::resource('cows', CowController::class);
+        Route::get('cows-genealogy', [CowController::class, 'genealogy'])->name('cows.genealogy');
         Route::resource('cow-types', CowTypeController::class);
         Route::resource('farms', FarmController::class);
         Route::resource('histories', HistoryController::class);
