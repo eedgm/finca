@@ -144,6 +144,13 @@
                                             <div class="flex justify-center space-x-2">
                                                 @can('view', $cow)
                                                 <button
+                                                    wire:click="viewCowGenealogy({{ $cow->id }})"
+                                                    class="text-purple-600 hover:text-purple-900"
+                                                    title="Ver Árbol Genealógico"
+                                                >
+                                                    <i class="bx bx-vector text-xl"></i>
+                                                </button>
+                                                <button
                                                     wire:click="viewCow({{ $cow->id }})"
                                                     class="text-blue-600 hover:text-blue-900"
                                                     title="Ver"
@@ -971,6 +978,37 @@
                 type="button"
                 class="button"
                 wire:click="closeImageZoom"
+            >
+                <i class="mr-1 icon ion-md-close"></i>
+                Cerrar
+            </button>
+        </div>
+    </x-modal>
+
+    <!-- Modal para Árbol Genealógico -->
+    <x-modal wire:model="showingGenealogyModal" max-width="6xl">
+        <div class="px-6 py-4">
+            @if($selectedCowForGenealogy)
+            <div class="max-h-[85vh] overflow-auto">
+                @php
+                    $cowForGenealogy = \App\Models\Cow::find($selectedCowForGenealogy);
+                @endphp
+                @if($cowForGenealogy)
+                    @livewire('cow-genealogy-tree', ['cow' => $cowForGenealogy, 'withoutSearch' => true], key('genealogy-' . $selectedCowForGenealogy))
+                @else
+                    <div class="text-center py-8">
+                        <p class="text-gray-500">Vaca no encontrada</p>
+                    </div>
+                @endif
+            </div>
+            @endif
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 flex justify-end">
+            <button
+                type="button"
+                class="button"
+                wire:click="closeGenealogyModal"
             >
                 <i class="mr-1 icon ion-md-close"></i>
                 Cerrar

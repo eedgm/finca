@@ -8,6 +8,7 @@
             </div>
         </div>
 
+        @if(!$withoutSearch)
         <div class="bg-white rounded-lg shadow p-4 mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-2">
                 Seleccionar Vaca o Toro
@@ -25,6 +26,7 @@
                 </select>
             </div>
         </div>
+        @endif
     </div>
 
     @if($selectedCow && !empty($genealogyTree))

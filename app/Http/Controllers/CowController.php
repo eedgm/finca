@@ -33,11 +33,15 @@ class CowController extends Controller
     /**
      * Display the genealogy tree.
      */
-    public function genealogy(Request $request): View
+    public function genealogy(Request $request, ?Cow $cow = null): View
     {
         $this->authorize('view-any', Cow::class);
+        
+        if ($cow) {
+            $this->authorize('view', $cow);
+        }
 
-        return view('app.cows.genealogy');
+        return view('app.cows.genealogy', compact('cow'));
     }
 
     /**

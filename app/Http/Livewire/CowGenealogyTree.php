@@ -17,11 +17,20 @@ class CowGenealogyTree extends Component
     public $cowsForSelect = [];
     public $genealogyTree = [];
     public $maxDepth = 5; // Maximum depth to prevent infinite recursion
+    public $withoutSearch = false;
 
-    public function mount(): void
+    public function mount(?Cow $cow = null, ?bool $withoutSearch = false): void
     {
         $this->authorize('view-any', Cow::class);
         $this->loadCowsForSelect();
+        if ($withoutSearch) {
+            $this->withoutSearch = true;
+        }
+
+        if ($cow && $cow->id) {
+            $this->selectedCowId = $cow->id;
+            $this->selectCow($cow->id);
+        }
     }
 
     public function loadCowsForSelect(): void
@@ -59,7 +68,7 @@ class CowGenealogyTree extends Component
     private function buildNode($cow, $depth): array
     {
         if ($depth >= $this->maxDepth || !$cow) {
-            return null;
+            return [];
         }
 
         $node = [

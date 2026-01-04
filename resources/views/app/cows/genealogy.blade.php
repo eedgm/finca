@@ -8,7 +8,7 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <x-partials.card>
-                @livewire('cow-genealogy-tree')
+                @livewire('cow-genealogy-tree', ['cow' => $cow ?? null])
             </x-partials.card>
         </div>
     </div>

@@ -68,6 +68,10 @@ class FarmDashboard extends Component
     // Filters modal
     public $showingFiltersModal = false;
     
+    // Genealogy modal
+    public $showingGenealogyModal = false;
+    public $selectedCowForGenealogy = null;
+    
     // Data for selects
     public $farmsForSelect = [];
     public $cowTypesForSelect = [];
@@ -187,6 +191,21 @@ class FarmDashboard extends Component
         }])->findOrFail($cowId);
         $this->authorize('view', $this->cow);
         $this->showingViewCowModal = true;
+    }
+
+    public function viewCowGenealogy($cowId): void
+    {
+        $cow = Cow::findOrFail($cowId);
+        $this->authorize('view', $cow);
+        
+        $this->selectedCowForGenealogy = $cowId;
+        $this->showingGenealogyModal = true;
+    }
+    
+    public function closeGenealogyModal(): void
+    {
+        $this->showingGenealogyModal = false;
+        $this->selectedCowForGenealogy = null;
     }
 
     public function editCow($cowId): void
@@ -666,6 +685,8 @@ class FarmDashboard extends Component
         $this->showingGallery = false;
         $this->showingFiltersModal = false;
         $this->showingImageZoom = false;
+        $this->showingGenealogyModal = false;
+        $this->selectedCowForGenealogy = null;
         $this->resetCowForm();
         $this->resetHistoryForm();
     }
