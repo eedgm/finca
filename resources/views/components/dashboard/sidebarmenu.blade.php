@@ -5,6 +5,11 @@
         </x-dashboard.sidebar-link>
     @endcan
     @can('view-any', App\Models\Farm::class)
+        <x-dashboard.sidebar-link name="Medicinas" href="{{ route('medicines.index') }}" :active="request()->routeIs('medicines.index')" icon="{{ 'bxs-capsule' }}">
+
+        </x-dashboard.sidebar-link>
+    @endcan
+    @can('view-any', App\Models\Farm::class)
         <x-dashboard.sidebar-link name="Finca" href="{{ route('farms.index') }}" :active="request()->routeIs('farms.index')" icon="{{ 'bx-landscape' }}">
 
         </x-dashboard.sidebar-link>
