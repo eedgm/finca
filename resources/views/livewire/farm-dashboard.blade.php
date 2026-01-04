@@ -493,7 +493,7 @@
 
     <!-- Modal para Agregar Historial -->
     <x-modal wire:model="showingHistoryModal">
-        <div class="px-6 py-4 max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4">
             <div class="text-lg font-bold">Agregar Historial</div>
 
             @if($selectedCowId)
