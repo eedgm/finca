@@ -485,7 +485,7 @@
             @if($selectedCowId)
             <!-- Historiales Anteriores -->
             <div class="mt-4 mb-4 p-3 bg-gray-50 rounded-lg">
-                <h6 class="font-semibold text-gray-700 mb-2">Historiales Anteriores</h6>
+                <h6 class="font-semibold text-gray-700 mb-2">Historiales Anteriores ({{ $this->cowHistories->count() }})</h6>
                 <div class="space-y-2 max-h-48 overflow-y-auto">
                     @foreach($this->cowHistories as $prevHistory)
                     <div class="border border-gray-200 rounded p-2 bg-white text-sm">
@@ -527,13 +527,72 @@
                 </x-inputs.group>
 
                 <x-inputs.group class="w-full">
-                    <x-inputs.number
-                        name="historyWeight"
-                        label="Peso (kg)"
-                        wire:model="historyWeight"
-                        step="0.01"
-                        placeholder="Peso"
-                    ></x-inputs.number>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                        <h4 class="text-sm font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                            <i class="icon ion-md-calculator"></i>
+                            Calcular Peso por Medidas
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">
+                                    Circunferencia del Pecho (cm)
+                                </label>
+                                <input
+                                    type="number"
+                                    wire:model="historyChestCircumference"
+                                    step="0.1"
+                                    min="0"
+                                    placeholder="Ej: 150"
+                                    class="w-full rounded border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-200"
+                                />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">
+                                    Longitud del Cuerpo (cm)
+                                </label>
+                                <input
+                                    type="number"
+                                    wire:model="historyBodyLength"
+                                    step="0.1"
+                                    min="0"
+                                    placeholder="Ej: 120"
+                                    class="w-full rounded border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-200"
+                                />
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            wire:click="calculateWeightFromMeasurements"
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                        >
+                            <i class="icon ion-md-calculator"></i>
+                            Calcular Peso Automáticamente
+                        </button>
+                        @if($historyChestCircumference && $historyBodyLength)
+                        <p class="text-xs text-gray-600 mt-2 text-center">
+                            Fórmula: (Circunferencia)² × Longitud / 10800
+                        </p>
+                        @endif
+                    </div>
+                    
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Peso (kg)
+                    </label>
+                    <div class="relative">
+                        <input
+                            type="number"
+                            wire:model="historyWeight"
+                            step="0.01"
+                            min="0"
+                            placeholder="Peso en kilogramos"
+                            class="w-full rounded border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-200 {{ $historyWeight ? 'bg-green-50 border-green-300' : '' }}"
+                        />
+                        @if($historyWeight)
+                        <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-600 text-xs font-medium">
+                            ✓ Calculado
+                        </span>
+                        @endif
+                    </div>
                     @error('historyWeight') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </x-inputs.group>
 

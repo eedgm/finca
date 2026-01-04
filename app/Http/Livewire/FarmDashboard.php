@@ -44,6 +44,8 @@ class FarmDashboard extends Component
     public $history;
     public $historyDate;
     public $historyWeight;
+    public $historyBodyLength; // Longitud del cuerpo en cm
+    public $historyChestCircumference; // Circunferencia del pecho en cm
     public $historyCowTypeId;
     public $historyComments;
     public $historyPicture;
@@ -91,6 +93,8 @@ class FarmDashboard extends Component
         'cowBorn' => ['nullable', 'date'],
         'historyDate' => ['required', 'date'],
         'historyWeight' => ['nullable', 'numeric'],
+        'historyBodyLength' => ['nullable', 'numeric', 'min:0'],
+        'historyChestCircumference' => ['nullable', 'numeric', 'min:0'],
         'historyCowTypeId' => ['nullable', 'exists:cow_types,id'],
         'historyComments' => ['nullable', 'max:255', 'string'],
         'historyPicture' => ['image', 'max:5000', 'nullable'],
@@ -267,6 +271,8 @@ class FarmDashboard extends Component
     {
         $this->historyDate = null;
         $this->historyWeight = null;
+        $this->historyBodyLength = null;
+        $this->historyChestCircumference = null;
         $this->historyCowTypeId = null;
         $this->historyComments = null;
         $this->historyPicture = null;
@@ -275,6 +281,25 @@ class FarmDashboard extends Component
         $this->medicineCc = [];
         $this->medicineTotalCc = [];
         $this->resetErrorBag();
+    }
+    
+    /**
+     * Calculate weight based on body measurements
+     * Formula: Weight (kg) = (Chest Circumference in cm)² × Body Length in cm / 10800
+     */
+    public function calculateWeightFromMeasurements(): void
+    {
+        if ($this->historyChestCircumference && $this->historyBodyLength && 
+            $this->historyChestCircumference > 0 && $this->historyBodyLength > 0) {
+            
+            // Fórmula de Schoorl: Peso = (Circunferencia del pecho)² × Longitud del cuerpo / 10800
+            $calculatedWeight = ($this->historyChestCircumference * $this->historyChestCircumference * $this->historyBodyLength) / 10800;
+            
+            // Redondear a 2 decimales
+            $this->historyWeight = round($calculatedWeight, 2);
+        } else {
+            $this->addError('historyWeight', 'Por favor ingrese la circunferencia del pecho y la longitud del cuerpo para calcular el peso.');
+        }
     }
     
     public function openGallery($cowId): void
