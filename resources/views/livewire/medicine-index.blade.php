@@ -37,9 +37,32 @@
     </div>
 
     <div class="block w-full overflow-auto scrolling-touch">
+        @if(isset($exhaustedMedicines) && $exhaustedMedicines->count() > 0)
+        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <h4 class="text-sm font-semibold text-red-800 mb-2">
+                <i class="icon ion-md-warning"></i> Medicinas Agotadas o Desechadas
+            </h4>
+            <div class="flex flex-wrap gap-2">
+                @foreach($exhaustedMedicines as $medicine)
+                <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">
+                    {{ $medicine->name }}
+                    @if($medicine->discarded)
+                        (Desechada)
+                    @else
+                        (Agotada: {{ $medicine->total_cc ?? 0 }} cc)
+                    @endif
+                </span>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
         <table class="w-full max-w-full mb-4 bg-transparent">
             <thead class="text-gray-700">
                 <tr>
+                    <th class="px-4 py-3 text-left">
+                        Estado
+                    </th>
                     <th class="px-4 py-3 text-left">
                         @lang('crud.medicines.inputs.name')
                     </th>
@@ -73,6 +96,27 @@
             <tbody class="text-gray-600">
                 @forelse($medicines as $medicine)
                 <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3 text-left">
+                        @if($medicine->discarded || ($medicine->total_cc !== null && $medicine->total_cc <= 0))
+                            <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">
+                                @if($medicine->discarded)
+                                    Desechada
+                                @else
+                                    Agotada
+                                @endif
+                            </span>
+                        @else
+                            @if($medicine->expiration_date && $medicine->expiration_date < now())
+                                <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">
+                                    Vencida
+                                </span>
+                            @else
+                                <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                                    Disponible
+                                </span>
+                            @endif
+                        @endif
+                    </td>
                     <td class="px-4 py-3 text-left">
                         {{ $medicine->name ?? '-' }}
                     </td>

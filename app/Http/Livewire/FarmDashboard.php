@@ -649,19 +649,9 @@ class FarmDashboard extends Component
                 return 'Sin Tipo';
             });
         }
-
-        // Get exhausted medicines (total_cc = 0 or discarded = true)
-        $exhaustedMedicines = Medicine::where(function($query) {
-            $query->where('discarded', true)
-                  ->orWhere(function($q) {
-                      $q->whereNotNull('total_cc')
-                        ->where('total_cc', '<=', 0);
-                  });
-        })->get();
         
         return view('livewire.farm-dashboard', [
             'cowsByType' => $cowsByType,
-            'exhaustedMedicines' => $exhaustedMedicines,
         ]);
     }
 }

@@ -47,7 +47,7 @@ class MedicineIndex extends Component
     public $newMarketDirection = '';
     public $showingManufacturerModal = false;
     public $showingMarketModal = false;
-    
+    public $exhaustedMedicines = [];
     // Search
     public $search = '';
     
@@ -76,6 +76,14 @@ class MedicineIndex extends Component
     {
         $this->authorize('view-any', Medicine::class);
         $this->loadSelectData();
+
+        $this->exhaustedMedicines = Medicine::where(function($query) {
+            $query->where('discarded', true)
+                  ->orWhere(function($q) {
+                      $q->whereNotNull('total_cc')
+                        ->where('total_cc', '<=', 0);
+                  });
+        })->get();
     }
 
     public function loadSelectData(): void
