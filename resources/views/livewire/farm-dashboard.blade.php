@@ -117,7 +117,7 @@
     @else
         <div class="space-y-6">
             @foreach($cowsByType as $typeName => $cows)
-                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                <div class="border border-gray-200 rounded-lg md:overflow-hidden overflow-visible">
                     <div class="bg-green-800 px-4 py-3">
                         <h4 class="text-lg font-semibold text-white">
                             {{ $typeName }} 
@@ -315,10 +315,10 @@
                         <!-- Vista de Cards para Mobile -->
                         <div class="md:hidden space-y-4 p-4">
                             @foreach($cows as $cow)
-                            <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow" x-data="{ showMore: false, showMenu: false }">
+                            <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-visible" x-data="{ showMore: false, showMenu: false, menuPosition: 'bottom' }" x-init="$watch('showMenu', value => { if (value) { $nextTick(() => { const button = $el.querySelector('[x-ref=menuButton]'); const menu = $el.querySelector('[x-ref=menu]'); if (button && menu) { const buttonRect = button.getBoundingClientRect(); const viewportHeight = window.innerHeight; const spaceBelow = viewportHeight - buttonRect.bottom; const spaceAbove = buttonRect.top; const menuHeight = 200; // Aproximado if (spaceBelow < menuHeight && spaceAbove > spaceBelow) { menuPosition = 'top'; } else { menuPosition = 'bottom'; } } }); } })">
                                 <div class="p-4 relative">
                                     <!-- Botón de menú (tres puntos) en esquina superior derecha -->
-                                    <div class="absolute top-4 right-4 z-10">
+                                    <div class="absolute top-4 right-4 z-10" x-ref="menuButton">
                                         <button
                                             type="button"
                                             @click="showMenu = !showMenu"
@@ -331,13 +331,15 @@
                                         
                                         <!-- Menú desplegable -->
                                         <div x-show="showMenu"
+                                             x-ref="menu"
                                              x-transition:enter="transition ease-out duration-100"
                                              x-transition:enter-start="opacity-0 transform scale-95"
                                              x-transition:enter-end="opacity-100 transform scale-100"
                                              x-transition:leave="transition ease-in duration-75"
                                              x-transition:leave-start="opacity-100 transform scale-100"
                                              x-transition:leave-end="opacity-0 transform scale-95"
-                                             class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20"
+                                             :class="menuPosition === 'top' ? 'absolute right-0 bottom-full mb-2' : 'absolute right-0 top-full mt-2'"
+                                             class="w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20"
                                              style="display: none;"
                                         >
                                             @can('view', $cow)
@@ -447,13 +449,13 @@
                                     <button
                                         type="button"
                                         @click="showMore = !showMore"
-                                        class="w-full flex items-center justify-between py-2 px-3 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors mb-2"
+                                        class="w-full flex items-center justify-between py-1.5 px-2 text-xs font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded transition-colors border border-gray-200"
                                     >
-                                        <span>
-                                            <i class="icon ion-md-information-circle mr-1"></i>
+                                        <span class="flex items-center gap-1.5">
+                                            <i class="icon ion-md-information-circle text-sm"></i>
                                             <span x-text="showMore ? 'Ver menos' : 'Ver más'"></span>
                                         </span>
-                                        <i class="icon ion-md-arrow-down transition-transform duration-200" :class="{ 'rotate-180': showMore }"></i>
+                                        <i class="icon ion-md-arrow-down text-sm transition-transform duration-200" :class="{ 'rotate-180': showMore }"></i>
                                     </button>
                                     
                                     <!-- Información adicional (oculta por defecto) -->
