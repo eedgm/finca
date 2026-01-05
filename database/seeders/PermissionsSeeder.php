@@ -30,6 +30,13 @@ class PermissionsSeeder extends Seeder
         Permission::create(['name' => 'update cow-types']);
         Permission::create(['name' => 'delete cow-types']);
 
+        // Breeds (Razas) permissions
+        Permission::create(['name' => 'list breeds']);
+        Permission::create(['name' => 'view breeds']);
+        Permission::create(['name' => 'create breeds']);
+        Permission::create(['name' => 'update breeds']);
+        Permission::create(['name' => 'delete breeds']);
+
         // Farms (Fincas) permissions
         Permission::create(['name' => 'list farms']);
         Permission::create(['name' => 'view farms']);

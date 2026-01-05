@@ -7,6 +7,7 @@ use App\Models\Farm;
 use App\Models\History;
 use App\Models\CowType;
 use App\Models\Medicine;
+use App\Models\Breed;
 use Livewire\Component;
 use Illuminate\View\View;
 use Livewire\WithFileUploads;
@@ -38,6 +39,11 @@ class FarmDashboard extends Component
     public $cowSold = false;
     public $cowPicture;
     public $cowBorn;
+    public $cowColorIds = []; // Array of color IDs
+    public $cowMarkingIds = []; // Array of marking IDs
+    public $cowBirthWeight;
+    public $cowHeight;
+    public $cowObservations;
     public $uploadIteration = 0;
     
     // History form properties
@@ -78,11 +84,21 @@ class FarmDashboard extends Component
     public $medicinesForSelect = [];
     public $fathersForSelect = [];
     public $mothersForSelect = [];
+    public $breedsForSelect = [];
+    public $colorsForSelect = [];
+    public $markingsForSelect = [];
+    
+    // Breed management for cows
+    public $cowBreeds = []; // Array of ['breed_id' => percentage]
+    public $showingBreedsModal = false;
     
     // Search properties
     public $searchNumber = '';
     public $searchGender = '';
     public $searchHistory = '';
+    public $searchColor = '';
+    public $searchMarkings = '';
+    public $searchBreed = '';
     
     protected $rules = [
         'cowNumber' => ['nullable', 'numeric'],
@@ -95,6 +111,11 @@ class FarmDashboard extends Component
         'cowSold' => ['required', 'boolean'],
         'cowPicture' => ['image', 'max:5000', 'nullable'],
         'cowBorn' => ['nullable', 'date'],
+        'newColor' => ['nullable', 'max:255', 'string'],
+        'newMarking' => ['nullable', 'max:255', 'string'],
+        'cowBirthWeight' => ['nullable', 'numeric', 'min:0'],
+        'cowHeight' => ['nullable', 'numeric', 'min:0'],
+        'cowObservations' => ['nullable', 'string'],
         'historyDate' => ['required', 'date'],
         'historyWeight' => ['nullable', 'numeric'],
         'historyBodyLength' => ['nullable', 'numeric', 'min:0'],
@@ -124,6 +145,9 @@ class FarmDashboard extends Component
             })
             ->pluck('name', 'id')
             ->toArray();
+        $this->breedsForSelect = Breed::pluck('name', 'id')->toArray();
+        $this->colorsForSelect = \App\Models\Color::pluck('name', 'id')->toArray();
+        $this->markingsForSelect = \App\Models\Marking::pluck('name', 'id')->toArray();
         $this->loadParentsAndMothers();
     }
     
@@ -181,12 +205,14 @@ class FarmDashboard extends Component
         $this->editingCow = false;
         $this->cowModalTitle = 'Nueva Vaca';
         $this->resetCowForm();
+        $this->loadSelectData();
+        $this->breedsForSelect = Breed::pluck('name', 'id')->toArray();
         $this->showingCowModal = true;
     }
 
     public function viewCow($cowId): void
     {
-        $this->cow = Cow::with(['farm', 'histories.cowType', 'histories.medicines' => function($query) {
+        $this->cow = Cow::with(['farm', 'breeds', 'colors', 'markings', 'histories.cowType', 'histories.medicines' => function($query) {
             $query->withPivot('cc');
         }])->findOrFail($cowId);
         $this->authorize('view', $this->cow);
@@ -212,7 +238,7 @@ class FarmDashboard extends Component
     {
         $this->editingCow = true;
         $this->cowModalTitle = 'Editar Vaca';
-        $this->cow = Cow::findOrFail($cowId);
+        $this->cow = Cow::with('breeds')->findOrFail($cowId);
         $this->authorize('update', $this->cow);
         
         $this->cowNumber = $this->cow->number;
@@ -224,8 +250,21 @@ class FarmDashboard extends Component
         $this->cowOwner = $this->cow->owner;
         $this->cowSold = $this->cow->sold;
         $this->cowBorn = $this->cow->born ? $this->cow->born->format('Y-m-d') : null;
+        $this->cowColorIds = $this->cow->colors->pluck('id')->toArray();
+        $this->cowMarkingIds = $this->cow->markings->pluck('id')->toArray();
+        $this->cowBirthWeight = $this->cow->birth_weight;
+        $this->cowHeight = $this->cow->height;
+        $this->cowObservations = $this->cow->observations;
+        
+        // Load breeds with percentages
+        $this->cowBreeds = [];
+        foreach ($this->cow->breeds as $breed) {
+            $this->cowBreeds[$breed->id] = $breed->pivot->percentage;
+        }
         
         $this->loadParentsAndMothers();
+        $this->loadSelectData();
+        $this->breedsForSelect = Breed::pluck('name', 'id')->toArray();
         $this->showingCowModal = true;
     }
 
@@ -281,7 +320,13 @@ class FarmDashboard extends Component
         $this->cowSold = false;
         $this->cowPicture = null;
         $this->cowBorn = null;
+        $this->cowColorIds = [];
+        $this->cowMarkingIds = [];
+        $this->cowBirthWeight = null;
+        $this->cowHeight = null;
+        $this->cowObservations = null;
         $this->cow = null;
+        $this->cowBreeds = [];
         $this->resetErrorBag();
         $this->uploadIteration++;
     }
@@ -514,6 +559,13 @@ class FarmDashboard extends Component
             'cowSold' => ['required', 'boolean'],
             'cowPicture' => ['image', 'max:5000', 'nullable'],
             'cowBorn' => ['nullable', 'date'],
+            'cowColorIds' => ['nullable', 'array'],
+            'cowColorIds.*' => ['exists:colors,id'],
+            'cowMarkingIds' => ['nullable', 'array'],
+            'cowMarkingIds.*' => ['exists:markings,id'],
+            'cowBirthWeight' => ['nullable', 'numeric', 'min:0'],
+            'cowHeight' => ['nullable', 'numeric', 'min:0'],
+            'cowObservations' => ['nullable', 'string'],
         ]);
 
         if ($this->editingCow) {
@@ -532,6 +584,9 @@ class FarmDashboard extends Component
         $this->cow->owner = $this->cowOwner;
         $this->cow->sold = $this->cowSold;
         $this->cow->born = $this->cowBorn ? \Carbon\Carbon::make($this->cowBorn) : null;
+        $this->cow->birth_weight = $this->cowBirthWeight;
+        $this->cow->height = $this->cowHeight;
+        $this->cow->observations = $this->cowObservations;
 
         if ($this->cowPicture) {
             if ($this->editingCow && $this->cow->picture) {
@@ -549,9 +604,106 @@ class FarmDashboard extends Component
         }
 
         $this->cow->save();
+        
+        // Save breeds with percentages
+        if (!empty($this->cowBreeds)) {
+            $breedsData = [];
+            foreach ($this->cowBreeds as $breedId => $percentage) {
+                if ($percentage > 0) {
+                    $breedsData[$breedId] = ['percentage' => $percentage];
+                }
+            }
+            $this->cow->breeds()->sync($breedsData);
+        } else {
+            $this->cow->breeds()->detach();
+        }
+        
+        // Save colors
+        $this->cow->colors()->sync($this->cowColorIds ?? []);
+        
+        // Save markings
+        $this->cow->markings()->sync($this->cowMarkingIds ?? []);
+        
         $this->uploadIteration++;
         $this->showingCowModal = false;
         $this->resetCowForm();
+    }
+    
+    public function addBreedToCow(): void
+    {
+        $this->validate([
+            'newBreedId' => ['required', 'exists:breeds,id'],
+            'newBreedPercentage' => ['required', 'numeric', 'min:0', 'max:100'],
+        ], [], [
+            'newBreedId' => 'raza',
+            'newBreedPercentage' => 'porcentaje',
+        ]);
+        
+        $totalPercentage = array_sum($this->cowBreeds) + $this->newBreedPercentage;
+        if ($totalPercentage > 100) {
+            $this->addError('newBreedPercentage', 'La suma de los porcentajes no puede exceder 100%. Total actual: ' . array_sum($this->cowBreeds) . '%');
+            return;
+        }
+        
+        $this->cowBreeds[$this->newBreedId] = $this->newBreedPercentage;
+        $this->newBreedId = null;
+        $this->newBreedPercentage = null;
+        $this->resetErrorBag('newBreedId');
+        $this->resetErrorBag('newBreedPercentage');
+    }
+    
+    public $newBreedId = null;
+    public $newBreedPercentage = null;
+    
+    public function removeBreedFromCow($breedId): void
+    {
+        unset($this->cowBreeds[$breedId]);
+    }
+    
+    public function calculateBreedsFromParents(): void
+    {
+        if (!$this->cowParentId && !$this->cowMotherId) {
+            $this->addError('breeds', 'Debe seleccionar al menos un padre o una madre para calcular las razas.');
+            return;
+        }
+        
+        $breeds = [];
+        
+        // Get breeds from parent (50% contribution)
+        if ($this->cowParentId) {
+            $parent = Cow::with('breeds')->find($this->cowParentId);
+            if ($parent) {
+                foreach ($parent->breeds as $breed) {
+                    $percentage = $breed->pivot->percentage / 2; // 50% from parent
+                    if (!isset($breeds[$breed->id])) {
+                        $breeds[$breed->id] = 0;
+                    }
+                    $breeds[$breed->id] += $percentage;
+                }
+            }
+        }
+        
+        // Get breeds from mother (50% contribution)
+        if ($this->cowMotherId) {
+            $mother = Cow::with('breeds')->find($this->cowMotherId);
+            if ($mother) {
+                foreach ($mother->breeds as $breed) {
+                    $percentage = $breed->pivot->percentage / 2; // 50% from mother
+                    if (!isset($breeds[$breed->id])) {
+                        $breeds[$breed->id] = 0;
+                    }
+                    $breeds[$breed->id] += $percentage;
+                }
+            }
+        }
+        
+        // Round percentages to 2 decimals
+        foreach ($breeds as $breedId => $percentage) {
+            $breeds[$breedId] = round($percentage, 2);
+        }
+        
+        $this->cowBreeds = $breeds;
+        $this->resetErrorBag('breeds');
     }
 
     public function saveHistory(): void
@@ -721,7 +873,11 @@ class FarmDashboard extends Component
         $this->searchNumber = '';
         $this->searchGender = '';
         $this->searchHistory = '';
+        $this->searchColor = '';
+        $this->searchMarkings = '';
+        $this->searchBreed = '';
     }
+    
 
     public function render(): View
     {
@@ -735,7 +891,7 @@ class FarmDashboard extends Component
         if ($farms->isNotEmpty()) {
             $farmIds = $farms->pluck('id');
             $cows = Cow::whereIn('farm_id', $farmIds)
-                ->with(['farm', 'histories' => function ($query) {
+                ->with(['farm', 'breeds', 'colors', 'markings', 'histories' => function ($query) {
                     $query->orderBy('date', 'desc')->with(['cowType', 'medicines' => function($medQuery) {
                         $medQuery->withPivot('cc');
                     }]);
@@ -764,6 +920,33 @@ class FarmDashboard extends Component
                             ($history->comments && stripos(strtolower($history->comments), $searchLower) !== false) ||
                             ($history->cowType && stripos(strtolower($history->cowType->name), $searchLower) !== false) ||
                             ($history->date && stripos($history->date->format('d/m/Y'), $this->searchHistory) !== false);
+                    });
+                });
+            }
+            
+            // Filter by color
+            if (!empty($this->searchColor)) {
+                $cows = $cows->filter(function ($cow) {
+                    return $cow->colors->contains(function($color) {
+                        return stripos(strtolower($color->name), strtolower($this->searchColor)) !== false;
+                    });
+                });
+            }
+            
+            // Filter by markings
+            if (!empty($this->searchMarkings)) {
+                $cows = $cows->filter(function ($cow) {
+                    return $cow->markings->contains(function($marking) {
+                        return stripos(strtolower($marking->name), strtolower($this->searchMarkings)) !== false;
+                    });
+                });
+            }
+            
+            // Filter by breed
+            if (!empty($this->searchBreed)) {
+                $cows = $cows->filter(function ($cow) {
+                    return $cow->breeds->contains(function($breed) {
+                        return stripos(strtolower($breed->name), strtolower($this->searchBreed)) !== false;
                     });
                 });
             }

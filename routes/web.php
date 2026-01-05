@@ -13,6 +13,7 @@ use App\Http\Controllers\MedicineController;
 use App\Http\Controllers\ManufacturerController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\BreedController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,6 +40,7 @@ Route::prefix('/')
         Route::resource('cows', CowController::class);
         Route::get('cows-genealogy/{cow?}', [CowController::class, 'genealogy'])->name('cows.genealogy');
         Route::resource('cow-types', CowTypeController::class);
+        Route::resource('breeds', BreedController::class);
         Route::resource('farms', FarmController::class);
         Route::resource('histories', HistoryController::class);
         Route::resource('manufacturers', ManufacturerController::class);

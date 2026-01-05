@@ -81,6 +81,15 @@
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Nacimiento
                                         </th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Color
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Marcas
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Raza
+                                        </th>
                                         <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Acciones
                                         </th>
@@ -139,6 +148,53 @@
                                         </td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                                             {{ $cow->born ? $cow->born->format('d/m/Y') : '-' }}
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                            @if($cow->colors && $cow->colors->count() > 0)
+                                                <div class="flex flex-wrap gap-1">
+                                                    @foreach($cow->colors as $color)
+                                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                                                        {{ $color->name }}
+                                                    </span>
+                                                    @endforeach
+                                                </div>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                            @if($cow->markings && $cow->markings->count() > 0)
+                                                <div class="flex flex-wrap gap-1">
+                                                    @foreach($cow->markings as $marking)
+                                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
+                                                        {{ $marking->name }}
+                                                    </span>
+                                                    @endforeach
+                                                </div>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                            @if($cow->breeds && $cow->breeds->count() > 0)
+                                                @php
+                                                    $predominantBreed = $cow->breeds->sortByDesc(function($breed) {
+                                                        return $breed->pivot->percentage;
+                                                    })->first();
+                                                @endphp
+                                                <div class="flex flex-col">
+                                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 mb-1">
+                                                        {{ $predominantBreed->name }}
+                                                    </span>
+                                                    @if($cow->breeds->count() > 1)
+                                                    <span class="text-xs text-gray-500">
+                                                        +{{ $cow->breeds->count() - 1 }} más
+                                                    </span>
+                                                    @endif
+                                                </div>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
                                         </td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-center">
                                             <div class="flex justify-center space-x-2">
@@ -340,6 +396,154 @@
                     ></x-inputs.date>
                     @error('cowBorn') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </x-inputs.group>
+
+                <!-- Características Físicas -->
+                <div class="w-full border-t border-gray-200 pt-4 mt-4">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-3">Características Físicas</h4>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <x-inputs.group class="w-full">
+                            <x-inputs.select
+                                name="cowColorIds"
+                                label="Colores"
+                                wire:model="cowColorIds"
+                                multiple
+                            >
+                                @foreach($colorsForSelect as $id => $name)
+                                <option value="{{ $id }}">{{ $name }}</option>
+                                @endforeach
+                            </x-inputs.select>
+                            @error('cowColorIds') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            @error('cowColorIds.*') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                        </x-inputs.group>
+
+                        <x-inputs.group class="w-full">
+                            <x-inputs.select
+                                name="cowMarkingIds"
+                                label="Marcas Distintivas"
+                                wire:model="cowMarkingIds"
+                                multiple
+                            >
+                                @foreach($markingsForSelect as $id => $name)
+                                <option value="{{ $id }}">{{ $name }}</option>
+                                @endforeach
+                            </x-inputs.select>
+                            @error('cowMarkingIds') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            @error('cowMarkingIds.*') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                        </x-inputs.group>
+
+                        <x-inputs.group class="w-full">
+                            <x-inputs.number
+                                name="cowBirthWeight"
+                                label="Peso al Nacer (kg)"
+                                wire:model="cowBirthWeight"
+                                min="0"
+                                step="0.01"
+                                placeholder="0.00"
+                            ></x-inputs.number>
+                            @error('cowBirthWeight') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                        </x-inputs.group>
+
+                        <x-inputs.group class="w-full">
+                            <x-inputs.number
+                                name="cowHeight"
+                                label="Altura a la Cruz (cm)"
+                                wire:model="cowHeight"
+                                min="0"
+                                step="0.01"
+                                placeholder="0.00"
+                            ></x-inputs.number>
+                            @error('cowHeight') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                        </x-inputs.group>
+                    </div>
+
+                    <x-inputs.group class="w-full mt-4">
+                        <x-inputs.textarea
+                            name="cowObservations"
+                            label="Observaciones"
+                            wire:model="cowObservations"
+                            rows="3"
+                            placeholder="Otras características, notas, etc."
+                        ></x-inputs.textarea>
+                        @error('cowObservations') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                    </x-inputs.group>
+                </div>
+
+                <!-- Razas -->
+                <x-inputs.group class="w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Razas ({{ array_sum($cowBreeds) }}% / 100%)
+                    </label>
+                    
+                    @if($cowParentId || $cowMotherId)
+                    <button
+                        type="button"
+                        wire:click="calculateBreedsFromParents"
+                        class="mb-3 text-sm text-blue-600 hover:text-blue-800 underline"
+                    >
+                        <i class="icon ion-md-calculator"></i> Calcular desde Padres
+                    </button>
+                    @endif
+                    
+                    <div class="space-y-2 mb-3">
+                        @foreach($cowBreeds as $breedId => $percentage)
+                        <div class="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                            <span class="flex-1 text-sm">
+                                <strong>{{ $breedsForSelect[$breedId] ?? 'Raza #' . $breedId }}</strong>: {{ number_format($percentage, 2) }}%
+                            </span>
+                            <button
+                                type="button"
+                                wire:click="removeBreedFromCow({{ $breedId }})"
+                                class="text-red-600 hover:text-red-800"
+                            >
+                                <i class="icon ion-md-close"></i>
+                            </button>
+                        </div>
+                        @endforeach
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <x-inputs.select
+                            name="newBreedId"
+                            label="Agregar Raza"
+                            wire:model="newBreedId"
+                            class="flex-1"
+                        >
+                            <option value="">Seleccione una raza</option>
+                            @foreach($breedsForSelect as $id => $name)
+                            <option value="{{ $id }}">{{ $name }}</option>
+                            @endforeach
+                        </x-inputs.select>
+                        
+                        <x-inputs.number
+                            name="newBreedPercentage"
+                            label="Porcentaje"
+                            wire:model="newBreedPercentage"
+                            min="0"
+                            max="100"
+                            step="0.01"
+                            class="w-32"
+                            placeholder="%"
+                        ></x-inputs.number>
+                        
+                        <button
+                            type="button"
+                            wire:click="addBreedToCow"
+                            class="button button-primary self-end"
+                        >
+                            <i class="icon ion-md-add"></i>
+                        </button>
+                    </div>
+                    @error('newBreedId') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                    @error('newBreedPercentage') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                    @error('breeds') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                    
+                    @if(array_sum($cowBreeds) > 100)
+                    <p class="text-red-500 text-xs mt-1">⚠️ La suma de los porcentajes excede 100%</p>
+                    @elseif(array_sum($cowBreeds) < 100 && !empty($cowBreeds))
+                    <p class="text-yellow-600 text-xs mt-1">⚠️ La suma de los porcentajes es menor a 100%</p>
+                    @endif
+                </x-inputs.group>
             </div>
         </div>
 
@@ -396,6 +600,32 @@
                     <span>{{ $cow->mother_id ?? '-' }}</span>
                 </div>
                 <div>
+                    <h5 class="font-medium text-gray-700">Razas</h5>
+                    @if($cow->breeds && $cow->breeds->count() > 0)
+                    <div class="mt-2 space-y-1">
+                        @foreach($cow->breeds as $breed)
+                        <div class="text-sm">
+                            <span class="font-medium">{{ $breed->name }}</span>: 
+                            <span>{{ number_format($breed->pivot->percentage, 2) }}%</span>
+                        </div>
+                        @endforeach
+                        @php
+                            $predominantBreed = $cow->predominantBreed;
+                        @endphp
+                        @if($predominantBreed)
+                        <div class="mt-2 pt-2 border-t border-gray-200">
+                            <span class="text-xs font-semibold text-blue-600">
+                                Raza Predominante: {{ $predominantBreed->name }} 
+                                ({{ number_format($predominantBreed->pivot->percentage, 2) }}%)
+                            </span>
+                        </div>
+                        @endif
+                    </div>
+                    @else
+                    <span class="text-gray-400">Sin razas asignadas</span>
+                    @endif
+                </div>
+                <div>
                     <h5 class="font-medium text-gray-700">Propietario</h5>
                     <span>{{ $cow->owner ?? '-' }}</span>
                 </div>
@@ -407,6 +637,58 @@
                     <h5 class="font-medium text-gray-700">Fecha de Nacimiento</h5>
                     <span>{{ $cow->born ? $cow->born->format('d/m/Y') : '-' }}</span>
                 </div>
+                
+                <!-- Características Físicas -->
+                <div class="border-t border-gray-200 pt-4 mt-4">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-3">Características Físicas</h4>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h5 class="font-medium text-gray-700 mb-2">Colores</h5>
+                            @if($cow->colors && $cow->colors->count() > 0)
+                                <div class="flex flex-wrap gap-1">
+                                    @foreach($cow->colors as $color)
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                                        {{ $color->name }}
+                                    </span>
+                                    @endforeach
+                                </div>
+                            @else
+                                <span class="text-gray-400">-</span>
+                            @endif
+                        </div>
+                        <div>
+                            <h5 class="font-medium text-gray-700 mb-2">Marcas Distintivas</h5>
+                            @if($cow->markings && $cow->markings->count() > 0)
+                                <div class="flex flex-wrap gap-1">
+                                    @foreach($cow->markings as $marking)
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
+                                        {{ $marking->name }}
+                                    </span>
+                                    @endforeach
+                                </div>
+                            @else
+                                <span class="text-gray-400">-</span>
+                            @endif
+                        </div>
+                        <div>
+                            <h5 class="font-medium text-gray-700">Peso al Nacer</h5>
+                            <span>{{ $cow->birth_weight ? number_format($cow->birth_weight, 2) . ' kg' : '-' }}</span>
+                        </div>
+                        <div>
+                            <h5 class="font-medium text-gray-700">Altura a la Cruz</h5>
+                            <span>{{ $cow->height ? number_format($cow->height, 2) . ' cm' : '-' }}</span>
+                        </div>
+                    </div>
+                    
+                    @if($cow->observations)
+                    <div class="mt-4">
+                        <h5 class="font-medium text-gray-700">Observaciones</h5>
+                        <p class="text-sm text-gray-600 whitespace-pre-wrap">{{ $cow->observations }}</p>
+                    </div>
+                    @endif
+                </div>
+                
                 <div>
                     <h5 class="font-medium text-gray-700 mb-2">Foto</h5>
                     @if($cow->picture)
@@ -928,6 +1210,42 @@
                         name="searchHistory"
                         wire:model.debounce.300ms="searchHistory"
                         placeholder="Comentarios, tipo, fecha..."
+                        autocomplete="off"
+                    ></x-inputs.text>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Filtrar por Color
+                    </label>
+                    <x-inputs.text
+                        name="searchColor"
+                        wire:model.debounce.300ms="searchColor"
+                        placeholder="Buscar por color..."
+                        autocomplete="off"
+                    ></x-inputs.text>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Filtrar por Marcas
+                    </label>
+                    <x-inputs.text
+                        name="searchMarkings"
+                        wire:model.debounce.300ms="searchMarkings"
+                        placeholder="Buscar por marcas distintivas..."
+                        autocomplete="off"
+                    ></x-inputs.text>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Filtrar por Raza
+                    </label>
+                    <x-inputs.text
+                        name="searchBreed"
+                        wire:model.debounce.300ms="searchBreed"
+                        placeholder="Buscar por raza..."
                         autocomplete="off"
                     ></x-inputs.text>
                 </div>

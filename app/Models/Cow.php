@@ -23,6 +23,9 @@ class Cow extends Model
         'owner',
         'sold',
         'born',
+        'birth_weight',
+        'height',
+        'observations',
     ];
 
     protected $searchableFields = ['*'];
@@ -70,5 +73,65 @@ class Cow extends Model
     public function childrenByMother()
     {
         return $this->hasMany(Cow::class, 'mother_id');
+    }
+
+    public function breeds()
+    {
+        return $this->belongsToMany(Breed::class, 'breed_cow')->withPivot('percentage');
+    }
+
+    public function colors()
+    {
+        return $this->belongsToMany(Color::class, 'color_cow');
+    }
+
+    public function markings()
+    {
+        return $this->belongsToMany(Marking::class, 'marking_cow');
+    }
+
+    /**
+     * Get the predominant breed based on highest percentage
+     */
+    public function getPredominantBreedAttribute()
+    {
+        return $this->breeds()
+            ->orderBy('cow_breed.percentage', 'desc')
+            ->first();
+    }
+
+    /**
+     * Calculate breed percentages from parents
+     */
+    public function calculateBreedPercentages(): void
+    {
+        $breeds = [];
+        
+        // Get breeds from parent (50% contribution)
+        if ($this->parent) {
+            foreach ($this->parent->breeds as $breed) {
+                $percentage = $breed->pivot->percentage / 2; // 50% from parent
+                if (!isset($breeds[$breed->id])) {
+                    $breeds[$breed->id] = 0;
+                }
+                $breeds[$breed->id] += $percentage;
+            }
+        }
+        
+        // Get breeds from mother (50% contribution)
+        if ($this->mother) {
+            foreach ($this->mother->breeds as $breed) {
+                $percentage = $breed->pivot->percentage / 2; // 50% from mother
+                if (!isset($breeds[$breed->id])) {
+                    $breeds[$breed->id] = 0;
+                }
+                $breeds[$breed->id] += $percentage;
+            }
+        }
+        
+        // Sync breeds with calculated percentages
+        if (!empty($breeds)) {
+            $this->breeds()->sync($breeds);
+        }
     }
 }

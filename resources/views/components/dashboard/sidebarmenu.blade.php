@@ -22,6 +22,10 @@
             <x-dashboard.child-link name="Ventas" href="{{ route('solds.index') }}" />
         </x-dashboard.sidebar-link>
     @endcan
+    @can('view-any', App\Models\Breed::class)
+        <x-dashboard.sidebar-link name="Razas" href="{{ route('breeds.index') }}" :active="request()->routeIs('breeds.*')" icon="{{ 'bx-dna' }}">
+        </x-dashboard.sidebar-link>
+    @endcan
     @can('view-any', App\Models\Medicine::class)
         <x-dashboard.sidebar-link id="2" name="Medicinas" href="javascript:;" :active="request()->routeIs('medicines.index')" icon="{{ 'bxs-capsule' }}">
             <x-dashboard.child-link name="Todas" href="{{ route('medicines.index') }}" />

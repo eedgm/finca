@@ -25,6 +25,9 @@ class DatabaseSeeder extends Seeder
 
         // $this->call(CowSeeder::class);
         $this->call(CowTypeSeeder::class);
+        $this->call(BreedsSeeder::class);
+        $this->call(ColorsSeeder::class);
+        $this->call(MarkingsSeeder::class);
         // $this->call(FarmSeeder::class);
         // $this->call(HistorySeeder::class);
         // $this->call(ManufacturerSeeder::class);
