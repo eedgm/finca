@@ -127,7 +127,8 @@
                         </h4>
                     </div>
                     <div class="bg-white">
-                        <div class="overflow-x-auto">
+                        <!-- Vista de Tabla para Desktop -->
+                        <div class="hidden md:block overflow-x-auto">
                             <table class="w-full">
                                 <thead class="bg-gray-50">
                                     <tr>
@@ -309,6 +310,218 @@
                                     @endforeach
                                 </tbody>
                             </table>
+                        </div>
+                        
+                        <!-- Vista de Cards para Mobile -->
+                        <div class="md:hidden space-y-4 p-4">
+                            @foreach($cows as $cow)
+                            <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow" x-data="{ showMore: false, showMenu: false }">
+                                <div class="p-4 relative">
+                                    <!-- Botón de menú (tres puntos) en esquina superior derecha -->
+                                    <div class="absolute top-4 right-4 z-10">
+                                        <button
+                                            type="button"
+                                            @click="showMenu = !showMenu"
+                                            @click.away="showMenu = false"
+                                            class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                                            title="Opciones"
+                                        >
+                                            <i class="icon ion-md-more text-xl"></i>
+                                        </button>
+                                        
+                                        <!-- Menú desplegable -->
+                                        <div x-show="showMenu"
+                                             x-transition:enter="transition ease-out duration-100"
+                                             x-transition:enter-start="opacity-0 transform scale-95"
+                                             x-transition:enter-end="opacity-100 transform scale-100"
+                                             x-transition:leave="transition ease-in duration-75"
+                                             x-transition:leave-start="opacity-100 transform scale-100"
+                                             x-transition:leave-end="opacity-0 transform scale-95"
+                                             class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20"
+                                             style="display: none;"
+                                        >
+                                            @can('view', $cow)
+                                            <button
+                                                wire:click="viewCowGenealogy({{ $cow->id }})"
+                                                @click="showMenu = false"
+                                                class="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                            >
+                                                <i class="bx bx-vector text-lg text-purple-600"></i>
+                                                <span>Árbol Genealógico</span>
+                                            </button>
+                                            <button
+                                                wire:click="viewCow({{ $cow->id }})"
+                                                @click="showMenu = false"
+                                                class="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                            >
+                                                <i class="icon ion-md-eye text-lg text-blue-600"></i>
+                                                <span>Ver Detalles</span>
+                                            </button>
+                                            @endcan
+                                            @can('update', $cow)
+                                            <button
+                                                wire:click="editCow({{ $cow->id }})"
+                                                @click="showMenu = false"
+                                                class="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                            >
+                                                <i class="icon ion-md-create text-lg text-green-600"></i>
+                                                <span>Editar</span>
+                                            </button>
+                                            @endcan
+                                            @can('create', App\Models\History::class)
+                                            <button
+                                                wire:click="newHistory({{ $cow->id }})"
+                                                @click="showMenu = false"
+                                                class="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                            >
+                                                <i class="icon ion-md-add-circle text-lg text-purple-600"></i>
+                                                <span>Agregar Historial</span>
+                                            </button>
+                                            @endcan
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Header con foto e info básica -->
+                                    <div class="flex items-start gap-3 mb-3 pr-10">
+                                        <div class="flex-shrink-0 relative">
+                                            @if($cow->picture)
+                                                <button
+                                                    type="button"
+                                                    wire:click="zoomImage('{{ \Storage::url($cow->picture) }}', '{{ $cow->name ?? 'Vaca #' . ($cow->number ?? $cow->id) }}')"
+                                                    class="cursor-pointer hover:opacity-80 transition-opacity relative"
+                                                >
+                                                    <x-partials.thumbnail
+                                                        src="{{ \Storage::url($cow->picture) }}"
+                                                    />
+                                                    <!-- Símbolo de género en esquina -->
+                                                    <span class="absolute -top-1 -right-1 w-6 h-6 rounded-full {{ $cow->gender === 'male' ? 'bg-blue-500' : 'bg-pink-500' }} flex items-center justify-center shadow-md">
+                                                        <i class="icon {{ $cow->gender === 'male' ? 'ion-md-male' : 'ion-md-female' }} text-white text-xs"></i>
+                                                    </span>
+                                                </button>
+                                            @else
+                                                <div class="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center relative">
+                                                    <i class="icon ion-md-cow text-2xl text-gray-400"></i>
+                                                    <!-- Símbolo de género en esquina -->
+                                                    <span class="absolute -top-1 -right-1 w-6 h-6 rounded-full {{ $cow->gender === 'male' ? 'bg-blue-500' : 'bg-pink-500' }} flex items-center justify-center shadow-md">
+                                                        <i class="icon {{ $cow->gender === 'male' ? 'ion-md-male' : 'ion-md-female' }} text-white text-xs"></i>
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <h5 class="font-semibold text-gray-900 truncate">
+                                                    {{ $cow->name ?? 'Vaca #' . ($cow->number ?? $cow->id) }}
+                                                </h5>
+                                                @if($cow->histories && $cow->histories->count() > 0)
+                                                <span 
+                                                    class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 flex-shrink-0"
+                                                    wire:click="newHistory({{ $cow->id }})"
+                                                >
+                                                    {{ $cow->histories->count() }} hist.
+                                                </span>
+                                                @else
+                                                <span 
+                                                    class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 flex-shrink-0"
+                                                    wire:click="newHistory({{ $cow->id }})"
+                                                >
+                                                    Sin hist.
+                                                </span>
+                                                @endif
+                                            </div>
+                                            <div class="flex flex-wrap items-center gap-2 text-sm text-gray-600">
+                                                @if($cow->number)
+                                                <span class="font-medium">#{{ $cow->number }}</span>
+                                                @endif
+                                                @if($cow->born)
+                                                <span class="text-xs">
+                                                    <i class="icon ion-md-calendar mr-1"></i>
+                                                    {{ $cow->born->format('d/m/Y') }}
+                                                </span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Botón Ver más -->
+                                    <button
+                                        type="button"
+                                        @click="showMore = !showMore"
+                                        class="w-full flex items-center justify-between py-2 px-3 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors mb-2"
+                                    >
+                                        <span>
+                                            <i class="icon ion-md-information-circle mr-1"></i>
+                                            <span x-text="showMore ? 'Ver menos' : 'Ver más'"></span>
+                                        </span>
+                                        <i class="icon ion-md-arrow-down transition-transform duration-200" :class="{ 'rotate-180': showMore }"></i>
+                                    </button>
+                                    
+                                    <!-- Información adicional (oculta por defecto) -->
+                                    <div x-show="showMore"
+                                         x-transition:enter="transition ease-out duration-200"
+                                         x-transition:enter-start="opacity-0 transform scale-95"
+                                         x-transition:enter-end="opacity-100 transform scale-100"
+                                         x-transition:leave="transition ease-in duration-150"
+                                         x-transition:leave-start="opacity-100 transform scale-100"
+                                         x-transition:leave-end="opacity-0 transform scale-95"
+                                         class="space-y-2 text-sm">
+                                        @if($cow->farm)
+                                        <div class="flex items-center gap-2 text-gray-600">
+                                            <i class="icon ion-md-home text-gray-400"></i>
+                                            <span>{{ $cow->farm->name }}</span>
+                                        </div>
+                                        @endif
+                                        
+                                        @if($cow->colors && $cow->colors->count() > 0)
+                                        <div class="flex items-start gap-2">
+                                            <i class="icon ion-md-color-palette text-gray-400 mt-0.5"></i>
+                                            <div class="flex flex-wrap gap-1 flex-1">
+                                                @foreach($cow->colors as $color)
+                                                <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                                                    {{ $color->name }}
+                                                </span>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                        @endif
+                                        
+                                        @if($cow->markings && $cow->markings->count() > 0)
+                                        <div class="flex items-start gap-2">
+                                            <i class="icon ion-md-pricetag text-gray-400 mt-0.5"></i>
+                                            <div class="flex flex-wrap gap-1 flex-1">
+                                                @foreach($cow->markings as $marking)
+                                                <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
+                                                    {{ $marking->name }}
+                                                </span>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                        @endif
+                                        
+                                        @if($cow->breeds && $cow->breeds->count() > 0)
+                                        <div class="flex items-start gap-2">
+                                            <i class="icon ion-md-dna text-gray-400 mt-0.5"></i>
+                                            <div class="flex flex-wrap gap-1 flex-1">
+                                                @php
+                                                    $predominantBreed = $cow->breeds->sortByDesc(function($breed) {
+                                                        return $breed->pivot->percentage;
+                                                    })->first();
+                                                @endphp
+                                                <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                                    {{ $predominantBreed->name }}
+                                                </span>
+                                                @if($cow->breeds->count() > 1)
+                                                <span class="px-2 py-0.5 text-xs text-gray-600">
+                                                    +{{ $cow->breeds->count() - 1 }} más
+                                                </span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
                         </div>
                     </div>
                 </div>
