@@ -1218,36 +1218,45 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">
                         Filtrar por Color
                     </label>
-                    <x-inputs.text
-                        name="searchColor"
-                        wire:model.debounce.300ms="searchColor"
-                        placeholder="Buscar por color..."
-                        autocomplete="off"
-                    ></x-inputs.text>
+                    <x-inputs.select
+                        name="filterColorId"
+                        wire:model="filterColorId"
+                    >
+                        <option value="">Todos los colores</option>
+                        @foreach($colorsForSelect as $id => $name)
+                        <option value="{{ $id }}">{{ $name }}</option>
+                        @endforeach
+                    </x-inputs.select>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
                         Filtrar por Marcas
                     </label>
-                    <x-inputs.text
-                        name="searchMarkings"
-                        wire:model.debounce.300ms="searchMarkings"
-                        placeholder="Buscar por marcas distintivas..."
-                        autocomplete="off"
-                    ></x-inputs.text>
+                    <x-inputs.select
+                        name="filterMarkingId"
+                        wire:model="filterMarkingId"
+                    >
+                        <option value="">Todas las marcas</option>
+                        @foreach($markingsForSelect as $id => $name)
+                        <option value="{{ $id }}">{{ $name }}</option>
+                        @endforeach
+                    </x-inputs.select>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
                         Filtrar por Raza
                     </label>
-                    <x-inputs.text
-                        name="searchBreed"
-                        wire:model.debounce.300ms="searchBreed"
-                        placeholder="Buscar por raza..."
-                        autocomplete="off"
-                    ></x-inputs.text>
+                    <x-inputs.select
+                        name="filterBreedId"
+                        wire:model="filterBreedId"
+                    >
+                        <option value="">Todas las razas</option>
+                        @foreach($breedsForSelect as $id => $name)
+                        <option value="{{ $id }}">{{ $name }}</option>
+                        @endforeach
+                    </x-inputs.select>
                 </div>
             </div>
         </div>

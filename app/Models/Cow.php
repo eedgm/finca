@@ -96,7 +96,7 @@ class Cow extends Model
     public function getPredominantBreedAttribute()
     {
         return $this->breeds()
-            ->orderBy('cow_breed.percentage', 'desc')
+            ->orderBy('breed_cow.percentage', 'desc')
             ->first();
     }
 

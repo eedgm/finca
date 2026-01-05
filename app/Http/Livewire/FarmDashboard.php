@@ -100,6 +100,11 @@ class FarmDashboard extends Component
     public $searchMarkings = '';
     public $searchBreed = '';
     
+    // For filter selects
+    public $filterColorId = '';
+    public $filterMarkingId = '';
+    public $filterBreedId = '';
+    
     protected $rules = [
         'cowNumber' => ['nullable', 'numeric'],
         'cowName' => ['nullable', 'max:255', 'string'],
@@ -876,6 +881,9 @@ class FarmDashboard extends Component
         $this->searchColor = '';
         $this->searchMarkings = '';
         $this->searchBreed = '';
+        $this->filterColorId = '';
+        $this->filterMarkingId = '';
+        $this->filterBreedId = '';
     }
     
 
@@ -924,8 +932,13 @@ class FarmDashboard extends Component
                 });
             }
             
-            // Filter by color
-            if (!empty($this->searchColor)) {
+            // Filter by color (by ID from select)
+            if (!empty($this->filterColorId)) {
+                $cows = $cows->filter(function ($cow) {
+                    return $cow->colors->contains('id', $this->filterColorId);
+                });
+            } elseif (!empty($this->searchColor)) {
+                // Fallback to text search if needed
                 $cows = $cows->filter(function ($cow) {
                     return $cow->colors->contains(function($color) {
                         return stripos(strtolower($color->name), strtolower($this->searchColor)) !== false;
@@ -933,8 +946,13 @@ class FarmDashboard extends Component
                 });
             }
             
-            // Filter by markings
-            if (!empty($this->searchMarkings)) {
+            // Filter by markings (by ID from select)
+            if (!empty($this->filterMarkingId)) {
+                $cows = $cows->filter(function ($cow) {
+                    return $cow->markings->contains('id', $this->filterMarkingId);
+                });
+            } elseif (!empty($this->searchMarkings)) {
+                // Fallback to text search if needed
                 $cows = $cows->filter(function ($cow) {
                     return $cow->markings->contains(function($marking) {
                         return stripos(strtolower($marking->name), strtolower($this->searchMarkings)) !== false;
@@ -942,8 +960,13 @@ class FarmDashboard extends Component
                 });
             }
             
-            // Filter by breed
-            if (!empty($this->searchBreed)) {
+            // Filter by breed (by ID from select)
+            if (!empty($this->filterBreedId)) {
+                $cows = $cows->filter(function ($cow) {
+                    return $cow->breeds->contains('id', $this->filterBreedId);
+                });
+            } elseif (!empty($this->searchBreed)) {
+                // Fallback to text search if needed
                 $cows = $cows->filter(function ($cow) {
                     return $cow->breeds->contains(function($breed) {
                         return stripos(strtolower($breed->name), strtolower($this->searchBreed)) !== false;
