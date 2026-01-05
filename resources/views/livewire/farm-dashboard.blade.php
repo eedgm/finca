@@ -397,11 +397,29 @@
                     @error('cowBorn') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </x-inputs.group>
 
-                <!-- Características Físicas -->
-                <div class="w-full border-t border-gray-200 pt-4 mt-4">
-                    <h4 class="text-sm font-semibold text-gray-700 mb-3">Características Físicas</h4>
+                <!-- Características Físicas - Acordeón -->
+                <div class="w-full border-t border-gray-200 pt-4 mt-4" x-data="{ open: false }">
+                    <button
+                        type="button"
+                        @click="open = !open"
+                        class="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <div class="flex items-center gap-2">
+                            <i class="icon ion-md-body text-blue-600"></i>
+                            <h4 class="text-sm font-semibold text-gray-700">Características Físicas</h4>
+                        </div>
+                        <i class="icon ion-md-arrow-down transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
+                    </button>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div x-show="open" 
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 transform scale-95"
+                         x-transition:enter-end="opacity-100 transform scale-100"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 transform scale-100"
+                         x-transition:leave-end="opacity-0 transform scale-95"
+                         class="mt-3">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <x-inputs.group class="w-full">
                             <x-inputs.select
                                 name="cowColorIds"
@@ -457,93 +475,185 @@
                         </x-inputs.group>
                     </div>
 
-                    <x-inputs.group class="w-full mt-4">
-                        <x-inputs.textarea
-                            name="cowObservations"
-                            label="Observaciones"
-                            wire:model="cowObservations"
-                            rows="3"
-                            placeholder="Otras características, notas, etc."
-                        ></x-inputs.textarea>
-                        @error('cowObservations') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                    </x-inputs.group>
+                        <x-inputs.group class="w-full mt-4">
+                            <x-inputs.textarea
+                                name="cowObservations"
+                                label="Observaciones"
+                                wire:model="cowObservations"
+                                rows="3"
+                                placeholder="Otras características, notas, etc."
+                            ></x-inputs.textarea>
+                            @error('cowObservations') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                        </x-inputs.group>
+                    </div>
                 </div>
 
-                <!-- Razas -->
-                <x-inputs.group class="w-full">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Razas ({{ array_sum($cowBreeds) }}% / 100%)
-                    </label>
-                    
-                    @if($cowParentId || $cowMotherId)
+                <!-- Razas - Acordeón -->
+                <div class="w-full border-t border-gray-200 pt-4 mt-4" x-data="{ open: false }">
                     <button
                         type="button"
-                        wire:click="calculateBreedsFromParents"
-                        class="mb-3 text-sm text-blue-600 hover:text-blue-800 underline"
+                        @click="open = !open"
+                        class="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 mb-3"
                     >
-                        <i class="icon ion-md-calculator"></i> Calcular desde Padres
-                    </button>
-                    @endif
-                    
-                    <div class="space-y-2 mb-3">
-                        @foreach($cowBreeds as $breedId => $percentage)
-                        <div class="flex items-center gap-2 p-2 bg-gray-50 rounded">
-                            <span class="flex-1 text-sm">
-                                <strong>{{ $breedsForSelect[$breedId] ?? 'Raza #' . $breedId }}</strong>: {{ number_format($percentage, 2) }}%
+                        <div class="flex items-center gap-2">
+                            <i class="icon ion-md-dna text-green-600"></i>
+                            <h4 class="text-sm font-semibold text-gray-700">Razas</h4>
+                            <span class="text-xs font-medium px-2 py-1 rounded-full {{ array_sum($cowBreeds) == 100 ? 'bg-green-100 text-green-700' : (array_sum($cowBreeds) > 100 ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700') }}">
+                                {{ number_format(array_sum($cowBreeds), 2) }}% / 100%
                             </span>
+                        </div>
+                        <i class="icon ion-md-arrow-down transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
+                    </button>
+                    
+                    <div x-show="open"
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 transform scale-95"
+                         x-transition:enter-end="opacity-100 transform scale-100"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 transform scale-100"
+                         x-transition:leave-end="opacity-0 transform scale-95">
+                        <div class="mb-4">
+                            <!-- Barra de progreso visual -->
+                            <div class="w-full bg-gray-200 rounded-full h-3 mb-3 overflow-hidden">
+                                <div 
+                                    class="h-full transition-all duration-300 {{ array_sum($cowBreeds) == 100 ? 'bg-green-500' : (array_sum($cowBreeds) > 100 ? 'bg-red-500' : 'bg-yellow-500') }}"
+                                    style="width: {{ min(100, array_sum($cowBreeds)) }}%"
+                                ></div>
+                            </div>
+                            
+                            @if($cowParentId || $cowMotherId)
+                            <button
+                                type="button"
+                                wire:click="calculateBreedsFromParents"
+                                class="mb-3 inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                            >
+                                <i class="icon ion-md-calculator"></i> Calcular desde Padres
+                            </button>
+                            @endif
+                        </div>
+                    
+                    <!-- Lista de razas agregadas -->
+                    @if(!empty($cowBreeds))
+                    <div class="space-y-2 mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div class="text-xs font-medium text-gray-600 mb-2">Razas asignadas:</div>
+                        @foreach($cowBreeds as $breedId => $percentage)
+                        <div class="flex items-center justify-between gap-3 p-3 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2">
+                                    <i class="icon ion-md-paw text-green-600"></i>
+                                    <span class="font-semibold text-gray-800">
+                                        {{ $breedsForSelect[$breedId] ?? 'Raza #' . $breedId }}
+                                    </span>
+                                </div>
+                                <div class="mt-1 flex items-center gap-2">
+                                    <div class="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
+                                        <div 
+                                            class="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-300"
+                                            style="width: {{ $percentage }}%"
+                                        ></div>
+                                    </div>
+                                    <span class="text-sm font-bold text-gray-700 min-w-[60px] text-right">
+                                        {{ number_format($percentage, 2) }}%
+                                    </span>
+                                </div>
+                            </div>
                             <button
                                 type="button"
                                 wire:click="removeBreedFromCow({{ $breedId }})"
-                                class="text-red-600 hover:text-red-800"
+                                class="flex-shrink-0 p-2 text-red-500 hover:text-white hover:bg-red-500 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-300"
+                                title="Eliminar raza"
                             >
-                                <i class="icon ion-md-close"></i>
+                                <i class="icon ion-md-close text-lg"></i>
                             </button>
                         </div>
                         @endforeach
                     </div>
-                    
-                    <div class="flex gap-2">
-                        <x-inputs.select
-                            name="newBreedId"
-                            label="Agregar Raza"
-                            wire:model="newBreedId"
-                            class="flex-1"
-                        >
-                            <option value="">Seleccione una raza</option>
-                            @foreach($breedsForSelect as $id => $name)
-                            <option value="{{ $id }}">{{ $name }}</option>
-                            @endforeach
-                        </x-inputs.select>
-                        
-                        <x-inputs.number
-                            name="newBreedPercentage"
-                            label="Porcentaje"
-                            wire:model="newBreedPercentage"
-                            min="0"
-                            max="100"
-                            step="0.01"
-                            class="w-32"
-                            placeholder="%"
-                        ></x-inputs.number>
-                        
-                        <button
-                            type="button"
-                            wire:click="addBreedToCow"
-                            class="button button-primary self-end"
-                        >
-                            <i class="icon ion-md-add"></i>
-                        </button>
+                    @else
+                    <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300 text-center">
+                        <i class="icon ion-md-information-circle text-gray-400 text-2xl mb-2"></i>
+                        <p class="text-sm text-gray-500">No hay razas asignadas. Agregue razas usando el formulario a continuación.</p>
                     </div>
-                    @error('newBreedId') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                    @error('newBreedPercentage') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                    @error('breeds') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                    
-                    @if(array_sum($cowBreeds) > 100)
-                    <p class="text-red-500 text-xs mt-1">⚠️ La suma de los porcentajes excede 100%</p>
-                    @elseif(array_sum($cowBreeds) < 100 && !empty($cowBreeds))
-                    <p class="text-yellow-600 text-xs mt-1">⚠️ La suma de los porcentajes es menor a 100%</p>
                     @endif
-                </x-inputs.group>
+                    
+                    <!-- Formulario para agregar raza -->
+                    <div class="border-t border-gray-200 pt-4">
+                        <h5 class="text-sm font-semibold text-gray-700 mb-3">
+                            <i class="icon ion-md-add-circle mr-1"></i> Agregar Nueva Raza
+                        </h5>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div class="md:col-span-2">
+                                <x-inputs.select
+                                    name="newBreedId"
+                                    label="Seleccionar Raza"
+                                    wire:model="newBreedId"
+                                >
+                                    <option value="">-- Seleccione una raza --</option>
+                                    @foreach($breedsForSelect as $id => $name)
+                                    <option value="{{ $id }}" {{ in_array($id, array_keys($cowBreeds ?? [])) ? 'disabled' : '' }}>
+                                        {{ $name }}
+                                        @if(in_array($id, array_keys($cowBreeds ?? [])))
+                                        (Ya agregada)
+                                        @endif
+                                    </option>
+                                    @endforeach
+                                </x-inputs.select>
+                                @error('newBreedId') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+                            
+                            <div>
+                                <x-inputs.number
+                                    name="newBreedPercentage"
+                                    label="Porcentaje (%)"
+                                    wire:model="newBreedPercentage"
+                                    min="0"
+                                    max="100"
+                                    step="0.01"
+                                    placeholder="0.00"
+                                ></x-inputs.number>
+                                @error('newBreedPercentage') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3 flex justify-end">
+                            <button
+                                type="button"
+                                wire:click="addBreedToCow"
+                                class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md transition-colors shadow-sm hover:shadow-md"
+                            >
+                                <i class="icon ion-md-add"></i>
+                                Agregar Raza
+                            </button>
+                        </div>
+                        
+                        @error('breeds') <p class="text-red-500 text-xs mt-2">{{ $message }}</p> @enderror
+                        
+                        <!-- Mensajes de validación -->
+                        @if(array_sum($cowBreeds) > 100)
+                        <div class="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <div class="flex items-center gap-2 text-red-700">
+                                <i class="icon ion-md-alert-circle"></i>
+                                <span class="text-sm font-medium">La suma de los porcentajes excede 100%</span>
+                            </div>
+                            <p class="text-xs text-red-600 mt-1">Por favor ajuste los porcentajes para que sumen exactamente 100%</p>
+                        </div>
+                        @elseif(array_sum($cowBreeds) < 100 && !empty($cowBreeds))
+                        <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <div class="flex items-center gap-2 text-yellow-700">
+                                <i class="icon ion-md-warning"></i>
+                                <span class="text-sm font-medium">La suma de los porcentajes es menor a 100%</span>
+                            </div>
+                            <p class="text-xs text-yellow-600 mt-1">Faltan {{ number_format(100 - array_sum($cowBreeds), 2) }}% para completar el 100%</p>
+                        </div>
+                        @elseif(array_sum($cowBreeds) == 100 && !empty($cowBreeds))
+                        <div class="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <div class="flex items-center gap-2 text-green-700">
+                                <i class="icon ion-md-checkmark-circle"></i>
+                                <span class="text-sm font-medium">Porcentajes completos (100%)</span>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                </div>
             </div>
         </div>
 
