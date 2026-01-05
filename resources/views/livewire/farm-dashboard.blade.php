@@ -26,6 +26,77 @@
                 @endcan
             </div>
         </div>
+        
+        <!-- Filtros Activos -->
+        @if($searchNumber || $searchGender || $searchHistory || $filterColorId || $filterMarkingId || $filterBreedId)
+        <div class="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs font-medium text-gray-600">Filtros activos:</span>
+                
+                @if($searchNumber)
+                <span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                    Número: {{ $searchNumber }}
+                    <button type="button" wire:click="$set('searchNumber', '')" class="hover:text-blue-900">
+                        <i class="icon ion-md-close text-xs"></i>
+                    </button>
+                </span>
+                @endif
+                
+                @if($searchGender)
+                <span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                    {{ $searchGender === 'male' ? 'Macho' : 'Hembra' }}
+                    <button type="button" wire:click="$set('searchGender', '')" class="hover:text-blue-900">
+                        <i class="icon ion-md-close text-xs"></i>
+                    </button>
+                </span>
+                @endif
+                
+                @if($searchHistory)
+                <span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                    Historial: {{ $searchHistory }}
+                    <button type="button" wire:click="$set('searchHistory', '')" class="hover:text-blue-900">
+                        <i class="icon ion-md-close text-xs"></i>
+                    </button>
+                </span>
+                @endif
+                
+                @if($filterColorId && isset($colorsForSelect[$filterColorId]))
+                <span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                    Color: {{ $colorsForSelect[$filterColorId] }}
+                    <button type="button" wire:click="$set('filterColorId', '')" class="hover:text-blue-900">
+                        <i class="icon ion-md-close text-xs"></i>
+                    </button>
+                </span>
+                @endif
+                
+                @if($filterMarkingId && isset($markingsForSelect[$filterMarkingId]))
+                <span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                    Marca: {{ $markingsForSelect[$filterMarkingId] }}
+                    <button type="button" wire:click="$set('filterMarkingId', '')" class="hover:text-blue-900">
+                        <i class="icon ion-md-close text-xs"></i>
+                    </button>
+                </span>
+                @endif
+                
+                @if($filterBreedId && isset($breedsForSelect[$filterBreedId]))
+                <span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                    Raza: {{ $breedsForSelect[$filterBreedId] }}
+                    <button type="button" wire:click="$set('filterBreedId', '')" class="hover:text-blue-900">
+                        <i class="icon ion-md-close text-xs"></i>
+                    </button>
+                </span>
+                @endif
+                
+                <button
+                    type="button"
+                    wire:click="clearSearch"
+                    class="ml-auto text-xs text-gray-500 hover:text-gray-700 underline"
+                >
+                    Limpiar todos
+                </button>
+            </div>
+        </div>
+        @endif
     </div>
 
     @if($cowsByType->isEmpty())
@@ -652,6 +723,7 @@
                             </div>
                         </div>
                         @endif
+                    </div>
                     </div>
                 </div>
             </div>
@@ -1371,15 +1443,16 @@
             </div>
         </div>
 
-        <div class="px-6 py-4 bg-gray-50 flex justify-between">
+        <div class="px-6 py-4 bg-gray-50 flex justify-end gap-2">
+            @if($searchNumber || $searchGender || $searchHistory || $filterColorId || $filterMarkingId || $filterBreedId)
             <button
                 type="button"
                 wire:click="clearSearch"
-                class="button"
+                class="text-sm text-gray-500 hover:text-gray-700 underline"
             >
-                <i class="mr-1 icon ion-md-close"></i>
-                Limpiar Búsqueda
+                Limpiar filtros
             </button>
+            @endif
 
             <button
                 type="button"
@@ -1387,7 +1460,7 @@
                 wire:click="closeFiltersModal"
             >
                 <i class="mr-1 icon ion-md-checkmark"></i>
-                Aplicar Filtros
+                Aplicar
             </button>
         </div>
     </x-modal>
