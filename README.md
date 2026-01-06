@@ -1,66 +1,115 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🐄 Sistema de Gestión de Fincas (Finca)
 
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo">
 </p>
 
-## About Laravel
+<p align="center">
+  <strong>Sistema completo de gestión ganadera diseñado para el manejo integral de vacas y fincas</strong>
+</p>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 📋 Acerca del Sistema
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+**Finca** es un sistema web desarrollado con Laravel diseñado específicamente para la gestión integral de ganado bovino. El sistema permite el control completo del ciclo de vida de las vacas, desde su registro hasta el seguimiento de su historial médico, genealogía, ventas y más.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Características Principales
 
-## Learning Laravel
+- **Gestión de Vacas**: Registro completo con características físicas, razas, colores, marcas distintivas y genealogía
+- **Árbol Genealógico**: Visualización interactiva de la genealogía de las vacas con navegación entre padres, madres, hijos y hermanos
+- **Historial Médico**: Seguimiento detallado de historiales de salud, peso, medicinas administradas y tipos de vaca
+- **Gestión de Razas**: Sistema de razas con cálculo automático de porcentajes basado en parentesco
+- **Fincas**: Administración de múltiples fincas con control de usuarios y permisos
+- **Medicinas**: Inventario y control de medicamentos con seguimiento de uso
+- **Ventas**: Registro y seguimiento de ventas de ganado
+- **Roles y Permisos**: Sistema completo de autorización con roles y permisos granulares
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🚀 Tecnologías
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- **Backend**: Laravel 11
+- **Frontend**: Livewire, Alpine.js, Tailwind CSS
+- **Base de Datos**: MySQL/PostgreSQL
+- **Autenticación**: Laravel Sanctum
+- **Autorización**: Spatie Laravel Permission
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 📱 API REST para Aplicación Móvil
 
-## Laravel Sponsors
+El sistema incluye una **API REST completa** desarrollada con Laravel Sanctum para autenticación, diseñada para la futura integración con una aplicación móvil desarrollada con **Expo/React Native**.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Endpoints Disponibles
 
-### Premium Partners
+La API proporciona endpoints para:
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+- **Vacas (Cows)**: CRUD completo, historiales, ventas
+- **Fincas (Farms)**: Gestión de fincas, vacas asociadas, usuarios
+- **Historiales (Histories)**: Registro y consulta de historiales médicos
+- **Medicinas (Medicines)**: Inventario y control de medicamentos
+- **Tipos de Vaca (Cow Types)**: Clasificación y tipos de ganado
+- **Razas (Breeds)**: Gestión de razas bovinas
+- **Mercados (Markets)**: Gestión de puntos de venta
+- **Fabricantes (Manufacturers)**: Control de fabricantes de medicinas
+- **Ventas (Solds)**: Registro de transacciones
+- **Usuarios (Users)**: Gestión de usuarios y asignación a fincas
 
-## Contributing
+### Autenticación API
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+POST /api/login
+```
 
-## Code of Conduct
+La API utiliza Laravel Sanctum para autenticación mediante tokens, permitiendo una integración segura con aplicaciones móviles.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## 🏗️ Estructura del Proyecto
 
-## Security Vulnerabilities
+El sistema está organizado con una arquitectura modular que incluye:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- **Modelos Eloquent** con relaciones complejas (many-to-many, one-to-many)
+- **Livewire Components** para interfaces interactivas
+- **Policies** para control de acceso granular
+- **API Controllers** para endpoints REST
+- **Migrations** para gestión de esquema de base de datos
+- **Seeders** para datos iniciales (razas panameñas, permisos, etc.)
 
-## License
+## 📦 Instalación
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+# Clonar el repositorio
+git clone [repository-url]
+
+# Instalar dependencias
+composer install
+npm install
+
+# Configurar entorno
+cp .env.example .env
+php artisan key:generate
+
+# Configurar base de datos en .env
+# Luego ejecutar migraciones y seeders
+php artisan migrate --seed
+
+# Compilar assets
+npm run build
+
+# Iniciar servidor
+php artisan serve
+```
+
+## 🔐 Permisos y Roles
+
+El sistema incluye un sistema completo de roles y permisos:
+
+- **Super Admin**: Acceso completo al sistema
+- **Admin**: Gestión de roles, permisos y usuarios
+- **User**: Acceso a funcionalidades básicas según permisos asignados
+
+Los permisos se gestionan a nivel granular para cada módulo (vacas, fincas, historiales, etc.).
+
+## 📄 Licencia
+
+Este proyecto es software de código abierto licenciado bajo la [Licencia MIT](https://opensource.org/licenses/MIT).
+
+---
+
+<p align="center">
+  Desarrollado con ❤️ usando Laravel
+</p>
