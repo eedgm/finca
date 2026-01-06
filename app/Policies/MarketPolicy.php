@@ -15,7 +15,7 @@ class MarketPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->hasPermissionTo('list markets');
     }
 
     /**
@@ -23,7 +23,7 @@ class MarketPolicy
      */
     public function view(User $user, Market $model): bool
     {
-        return true;
+        return $user->hasPermissionTo('view markets');
     }
 
     /**
@@ -31,7 +31,7 @@ class MarketPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->hasPermissionTo('create markets');
     }
 
     /**
@@ -39,7 +39,7 @@ class MarketPolicy
      */
     public function update(User $user, Market $model): bool
     {
-        return true;
+        return $user->hasPermissionTo('update markets');
     }
 
     /**
@@ -47,7 +47,7 @@ class MarketPolicy
      */
     public function delete(User $user, Market $model): bool
     {
-        return true;
+        return $user->hasPermissionTo('delete markets');
     }
 
     /**
@@ -55,7 +55,7 @@ class MarketPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return true;
+        return $user->hasPermissionTo('delete markets');
     }
 
     /**

@@ -15,7 +15,7 @@ class SoldPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->hasPermissionTo('list solds');
     }
 
     /**
@@ -23,7 +23,7 @@ class SoldPolicy
      */
     public function view(User $user, Sold $model): bool
     {
-        return true;
+        return $user->hasPermissionTo('view solds');
     }
 
     /**
@@ -31,7 +31,7 @@ class SoldPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->hasPermissionTo('create solds');
     }
 
     /**
@@ -39,7 +39,7 @@ class SoldPolicy
      */
     public function update(User $user, Sold $model): bool
     {
-        return true;
+        return $user->hasPermissionTo('update solds');
     }
 
     /**
@@ -47,7 +47,7 @@ class SoldPolicy
      */
     public function delete(User $user, Sold $model): bool
     {
-        return true;
+        return $user->hasPermissionTo('delete solds');
     }
 
     /**
@@ -55,7 +55,7 @@ class SoldPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return true;
+        return $user->hasPermissionTo('delete solds');
     }
 
     /**
@@ -63,7 +63,7 @@ class SoldPolicy
      */
     public function restore(User $user, Sold $model): bool
     {
-        return false;
+        return $user->hasPermissionTo('restore solds');
     }
 
     /**

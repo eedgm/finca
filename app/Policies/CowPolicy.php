@@ -15,7 +15,7 @@ class CowPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->hasPermissionTo('list cows');
     }
 
     /**
@@ -23,7 +23,7 @@ class CowPolicy
      */
     public function view(User $user, Cow $model): bool
     {
-        return true;
+        return $user->hasPermissionTo('view cows');
     }
 
     /**
@@ -31,7 +31,7 @@ class CowPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->hasPermissionTo('create cows');
     }
 
     /**
@@ -39,7 +39,7 @@ class CowPolicy
      */
     public function update(User $user, Cow $model): bool
     {
-        return true;
+        return $user->hasPermissionTo('update cows');
     }
 
     /**
@@ -47,7 +47,7 @@ class CowPolicy
      */
     public function delete(User $user, Cow $model): bool
     {
-        return true;
+        return $user->hasPermissionTo('delete cows');
     }
 
     /**
@@ -55,7 +55,7 @@ class CowPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return true;
+        return $user->hasPermissionTo('delete cows');
     }
 
     /**

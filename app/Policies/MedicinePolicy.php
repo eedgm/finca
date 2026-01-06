@@ -15,7 +15,7 @@ class MedicinePolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->hasPermissionTo('list medicines');
     }
 
     /**
@@ -23,7 +23,7 @@ class MedicinePolicy
      */
     public function view(User $user, Medicine $model): bool
     {
-        return true;
+        return $user->hasPermissionTo('view medicines');
     }
 
     /**
@@ -31,7 +31,7 @@ class MedicinePolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->hasPermissionTo('create medicines');
     }
 
     /**
@@ -39,7 +39,7 @@ class MedicinePolicy
      */
     public function update(User $user, Medicine $model): bool
     {
-        return true;
+        return $user->hasPermissionTo('update medicines');
     }
 
     /**
@@ -47,7 +47,7 @@ class MedicinePolicy
      */
     public function delete(User $user, Medicine $model): bool
     {
-        return true;
+        return $user->hasPermissionTo('delete medicines');
     }
 
     /**
@@ -55,7 +55,7 @@ class MedicinePolicy
      */
     public function deleteAny(User $user): bool
     {
-        return true;
+        return $user->hasPermissionTo('delete medicines');
     }
 
     /**

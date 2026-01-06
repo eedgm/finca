@@ -34,24 +34,24 @@
         </x-dashboard.sidebar-link>
     @endcan
 
-    @if (Auth::user()->can('create', Spatie\Permission\Models\Role::class) ||
+    @if (Auth::user()->isSuperAdmin() ||
+                Auth::user()->can('create', Spatie\Permission\Models\Role::class) ||
                 Auth::user()->can('create', Spatie\Permission\Models\Permission::class))
         <!-- Section Devider -->
         <div class="pt-4 pb-1 pl-0 mb-4 text-xs text-white section" :class="isSidebarExpanded ? 'md:block' : 'hidden group-hover:md:block'">
             Permissions
         </div>
         <hr>
-        @can('create', Spatie\Permission\Models\Role::class)
+        @if (Auth::user()->isSuperAdmin() || Auth::user()->can('create', Spatie\Permission\Models\Role::class))
             <x-dashboard.sidebar-link name="Roles" href="{{ route('roles.index') }}" :active="request()->routeIs('roles.index')" icon="{{ 'bx-tag-alt' }}">
 
             </x-dashboard.sidebar-link>
-        @endcan
-        @can('create', Spatie\Permission\Models\Permission::class)
-            <x-dashboard.sidebar-link name="Permissions" href="{{ route('permissions.index') }}" :active="request()->routeIs('permissions.index')" icon="{{ 'bx-badge-check
-                ' }}">
+        @endif
+        @if (Auth::user()->isSuperAdmin() || Auth::user()->can('create', Spatie\Permission\Models\Permission::class))
+            <x-dashboard.sidebar-link name="Permissions" href="{{ route('permissions.index') }}" :active="request()->routeIs('permissions.index')" icon="{{ 'bx-badge-check' }}">
 
             </x-dashboard.sidebar-link>
-        @endcan
+        @endif
     @endif
 </ul>
 

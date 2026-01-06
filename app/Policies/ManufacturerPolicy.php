@@ -15,7 +15,7 @@ class ManufacturerPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->hasPermissionTo('list manufacturers');
     }
 
     /**
@@ -23,7 +23,7 @@ class ManufacturerPolicy
      */
     public function view(User $user, Manufacturer $model): bool
     {
-        return true;
+        return $user->hasPermissionTo('view manufacturers');
     }
 
     /**
@@ -31,7 +31,7 @@ class ManufacturerPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->hasPermissionTo('create manufacturers');
     }
 
     /**
@@ -39,7 +39,7 @@ class ManufacturerPolicy
      */
     public function update(User $user, Manufacturer $model): bool
     {
-        return true;
+        return $user->hasPermissionTo('update manufacturers');
     }
 
     /**
@@ -47,7 +47,7 @@ class ManufacturerPolicy
      */
     public function delete(User $user, Manufacturer $model): bool
     {
-        return true;
+        return $user->hasPermissionTo('delete manufacturers');
     }
 
     /**
@@ -55,7 +55,7 @@ class ManufacturerPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return true;
+        return $user->hasPermissionTo('delete manufacturers');
     }
 
     /**

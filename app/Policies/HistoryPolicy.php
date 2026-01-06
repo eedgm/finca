@@ -15,7 +15,7 @@ class HistoryPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->hasPermissionTo('list histories');
     }
 
     /**
@@ -23,7 +23,7 @@ class HistoryPolicy
      */
     public function view(User $user, History $model): bool
     {
-        return true;
+        return $user->hasPermissionTo('view histories');
     }
 
     /**
@@ -31,7 +31,7 @@ class HistoryPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->hasPermissionTo('create histories');
     }
 
     /**
@@ -39,7 +39,7 @@ class HistoryPolicy
      */
     public function update(User $user, History $model): bool
     {
-        return true;
+        return $user->hasPermissionTo('update histories');
     }
 
     /**
@@ -47,7 +47,7 @@ class HistoryPolicy
      */
     public function delete(User $user, History $model): bool
     {
-        return true;
+        return $user->hasPermissionTo('delete histories');
     }
 
     /**
@@ -55,7 +55,7 @@ class HistoryPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return true;
+        return $user->hasPermissionTo('delete histories');
     }
 
     /**

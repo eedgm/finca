@@ -15,7 +15,7 @@ class FarmPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->hasPermissionTo('list farms');
     }
 
     /**
@@ -23,7 +23,7 @@ class FarmPolicy
      */
     public function view(User $user, Farm $model): bool
     {
-        return true;
+        return $user->hasPermissionTo('view farms');
     }
 
     /**
@@ -31,7 +31,7 @@ class FarmPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->hasPermissionTo('create farms');
     }
 
     /**
@@ -39,7 +39,7 @@ class FarmPolicy
      */
     public function update(User $user, Farm $model): bool
     {
-        return true;
+        return $user->hasPermissionTo('update farms');
     }
 
     /**
@@ -47,7 +47,7 @@ class FarmPolicy
      */
     public function delete(User $user, Farm $model): bool
     {
-        return true;
+        return $user->hasPermissionTo('delete farms');
     }
 
     /**
@@ -55,7 +55,7 @@ class FarmPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return true;
+        return $user->hasPermissionTo('delete farms');
     }
 
     /**
