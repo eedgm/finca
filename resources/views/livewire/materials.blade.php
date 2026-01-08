@@ -443,12 +443,11 @@
     </x-modal>
 
     <!-- Scanner Modal -->
+    @if($scanningBarcode)
     <div
         x-data="barcodeScanner()"
-        x-show="$wire.scanningBarcode"
-        x-cloak
+        x-init="startScanning()"
         class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
-        style="display: none;"
     >
         <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <div class="flex justify-between items-center mb-4">
@@ -472,6 +471,7 @@
             </div>
         </div>
     </div>
+    @endif
 
 </div>
 
@@ -484,35 +484,43 @@
             let isScanning = false;
             
             return {
-                init() {
-                    this.$watch('$wire.scanningBarcode', (value) => {
-                        if (value && !isScanning) {
-                            setTimeout(() => {
-                                this.startScanning();
-                            }, 300);
-                        } else if (!value && isScanning) {
-                            this.stopScanning();
-                        }
-                    });
-                },
-                
                 async startScanning() {
+                    if (isScanning) return;
+                    
                     const scannerElement = document.getElementById('barcode-scanner');
-                    if (!scannerElement || isScanning) return;
+                    if (!scannerElement) {
+                        console.error('Elemento scanner no encontrado');
+                        return;
+                    }
                     
                     try {
-                        // Crear instancia de Html5Qrcode
+                        // Limpiar cualquier instancia anterior
+                        if (html5QrCode) {
+                            try {
+                                await html5QrCode.stop();
+                                await html5QrCode.clear();
+                            } catch (e) {
+                                // Ignorar errores al limpiar
+                            }
+                        }
+                        
+                        // Crear nueva instancia
                         html5QrCode = new Html5Qrcode("barcode-scanner");
                         isScanning = true;
                         
                         // Configuración para códigos de barras
                         const config = {
                             fps: 10,
-                            qrbox: { width: 250, height: 250 },
+                            qrbox: function(viewfinderWidth, viewfinderHeight) {
+                                let minEdgePercentage = 0.7;
+                                let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+                                let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+                                return {
+                                    width: qrboxSize,
+                                    height: qrboxSize
+                                };
+                            },
                             aspectRatio: 1.0,
-                            supportedScanTypes: [
-                                Html5QrcodeScanType.SCAN_TYPE_CAMERA
-                            ],
                             formatsToSupport: [
                                 Html5QrcodeSupportedFormats.CODE_128,
                                 Html5QrcodeSupportedFormats.CODE_39,
@@ -526,25 +534,60 @@
                             ]
                         };
                         
+                        // Intentar obtener la cámara trasera primero
+                        const cameras = await Html5Qrcode.getCameras();
+                        let cameraId = null;
+                        
+                        // Buscar cámara trasera
+                        for (let camera of cameras) {
+                            if (camera.label.toLowerCase().includes('back') || 
+                                camera.label.toLowerCase().includes('rear') ||
+                                camera.label.toLowerCase().includes('environment')) {
+                                cameraId = camera.id;
+                                break;
+                            }
+                        }
+                        
+                        // Si no hay cámara trasera, usar la primera disponible
+                        if (!cameraId && cameras.length > 0) {
+                            cameraId = cameras[0].id;
+                        }
+                        
+                        if (!cameraId) {
+                            throw new Error('No se encontró ninguna cámara disponible');
+                        }
+                        
                         // Iniciar escaneo
                         await html5QrCode.start(
-                            { facingMode: "environment" },
+                            cameraId,
                             config,
                             (decodedText, decodedResult) => {
                                 // Código detectado
+                                console.log('Código detectado:', decodedText);
                                 @this.set('materialCode', decodedText);
                                 this.stopScanning();
                                 @this.set('scanningBarcode', false);
                             },
                             (errorMessage) => {
-                                // Ignorar errores de escaneo continuo
+                                // Ignorar errores de escaneo continuo (NotFoundError es normal)
                             }
                         );
                     } catch (err) {
                         console.error('Error inicializando escáner:', err);
-                        alert('Error al acceder a la cámara. Asegúrate de dar permisos de cámara.');
-                        @this.set('scanningBarcode', false);
                         isScanning = false;
+                        html5QrCode = null;
+                        
+                        let errorMsg = 'Error al acceder a la cámara. ';
+                        if (err.name === 'NotAllowedError') {
+                            errorMsg += 'Por favor, permite el acceso a la cámara en la configuración del navegador.';
+                        } else if (err.name === 'NotFoundError') {
+                            errorMsg += 'No se encontró ninguna cámara disponible.';
+                        } else {
+                            errorMsg += err.message || 'Asegúrate de dar permisos de cámara.';
+                        }
+                        
+                        alert(errorMsg);
+                        @this.set('scanningBarcode', false);
                     }
                 },
                 
