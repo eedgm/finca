@@ -459,8 +459,11 @@
                     <i class="icon ion-md-close text-2xl"></i>
                 </button>
             </div>
-            <div id="barcode-scanner" class="w-full bg-black rounded overflow-hidden" style="min-height: 300px;"></div>
-            <p class="mt-4 text-sm text-gray-600 text-center">Apunta la cámara al código de barras</p>
+            <div id="barcode-scanner" class="w-full bg-black rounded overflow-hidden" style="min-height: 400px;"></div>
+            <p class="mt-4 text-sm text-gray-600 text-center">
+                <i class="icon ion-md-information-circle"></i> 
+                Apunta la cámara al código de barras. Asegúrate de que esté bien iluminado y enfocado.
+            </p>
             <div class="mt-4 flex justify-center">
                 <button
                     @click="$wire.set('scanningBarcode', false); stopScanning()"
@@ -508,19 +511,15 @@
                         html5QrCode = new Html5Qrcode("barcode-scanner");
                         isScanning = true;
                         
-                        // Configuración para códigos de barras
+                        // Configuración optimizada para códigos de barras
+                        // Nota: html5-qrcode funciona mejor con códigos QR, pero también soporta códigos de barras
                         const config = {
-                            fps: 10,
-                            qrbox: function(viewfinderWidth, viewfinderHeight) {
-                                let minEdgePercentage = 0.7;
-                                let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
-                                let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
-                                return {
-                                    width: qrboxSize,
-                                    height: qrboxSize
-                                };
-                            },
+                            fps: 10, // FPS estándar
+                            qrbox: { width: 300, height: 200 }, // Área rectangular para códigos de barras
                             aspectRatio: 1.0,
+                            disableFlip: false,
+                            rememberLastUsedCamera: true,
+                            // Formatos de códigos de barras más comunes
                             formatsToSupport: [
                                 Html5QrcodeSupportedFormats.CODE_128,
                                 Html5QrcodeSupportedFormats.CODE_39,
@@ -531,7 +530,8 @@
                                 Html5QrcodeSupportedFormats.UPC_E,
                                 Html5QrcodeSupportedFormats.CODABAR,
                                 Html5QrcodeSupportedFormats.ITF
-                            ]
+                            ],
+                            verbose: false
                         };
                         
                         // Intentar obtener la cámara trasera primero
@@ -557,19 +557,28 @@
                             throw new Error('No se encontró ninguna cámara disponible');
                         }
                         
-                        // Iniciar escaneo
+                        // Iniciar escaneo con configuración mejorada
                         await html5QrCode.start(
                             cameraId,
                             config,
                             (decodedText, decodedResult) => {
                                 // Código detectado
                                 console.log('Código detectado:', decodedText);
-                                @this.set('materialCode', decodedText);
-                                this.stopScanning();
-                                @this.set('scanningBarcode', false);
+                                console.log('Formato:', decodedResult.result.format);
+                                
+                                // Verificar que sea un código de barras válido
+                                if (decodedText && decodedText.length > 0) {
+                                    @this.set('materialCode', decodedText);
+                                    this.stopScanning();
+                                    @this.set('scanningBarcode', false);
+                                }
                             },
                             (errorMessage) => {
-                                // Ignorar errores de escaneo continuo (NotFoundError es normal)
+                                // Solo mostrar errores importantes en consola
+                                // NotFoundError es normal durante el escaneo continuo
+                                if (!errorMessage.includes('NotFoundException')) {
+                                    console.debug('Escaneo:', errorMessage);
+                                }
                             }
                         );
                     } catch (err) {
