@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('description')->nullable();
             $table->string('image')->nullable();
+            $table->string('code')->nullable();
             $table->unsignedBigInteger('farm_id');
             $table->unsignedBigInteger('market_id');
             $table->boolean('status')->default(true);

@@ -13,6 +13,7 @@ class Material extends Model
         'name',
         'description',
         'image',
+        'code',
         'farm_id',
         'market_id',
         'status',

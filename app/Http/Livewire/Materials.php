@@ -23,6 +23,7 @@ class Materials extends Component
     public $showingViewModal = false;
     public $modalTitle = 'Nuevo Material';
     public $editing = false;
+    public $scanningBarcode = false;
     
     // Material form properties
     public $material;
@@ -46,7 +47,8 @@ class Materials extends Component
     // Data for selects
     public $farmsForSelect = [];
     public $marketsForSelect = [];
-    
+    public $materialCode = null;
+
     protected $rules = [
         'materialName' => ['required', 'max:255', 'string'],
         'materialDescription' => ['nullable', 'string'],
@@ -54,6 +56,7 @@ class Materials extends Component
         'materialMarketId' => ['required', 'exists:markets,id'],
         'materialStatus' => ['required', 'boolean'],
         'materialImage' => ['image', 'max:5000', 'nullable'],
+        'materialCode' => ['nullable', 'max:255', 'string'],
         'newMarketName' => ['required', 'max:255', 'string'],
         'newMarketPhone' => ['nullable', 'max:255', 'string'],
         'newMarketDirection' => ['nullable', 'max:255', 'string'],
@@ -100,7 +103,7 @@ class Materials extends Component
         $this->materialFarmId = $this->material->farm_id;
         $this->materialMarketId = $this->material->market_id;
         $this->materialStatus = $this->material->status ?? true;
-        
+        $this->materialCode = $this->material->code;
         $this->loadSelectData();
         $this->showingModal = true;
     }
@@ -114,6 +117,7 @@ class Materials extends Component
         $this->materialStatus = true;
         $this->materialImage = null;
         $this->material = null;
+        $this->materialCode = null;
         $this->resetErrorBag();
         $this->uploadIteration++;
     }
@@ -127,6 +131,7 @@ class Materials extends Component
             'materialMarketId' => ['required', 'exists:markets,id'],
             'materialStatus' => ['required', 'boolean'],
             'materialImage' => ['image', 'max:5000', 'nullable'],
+            'materialCode' => ['nullable', 'max:255', 'string'],
         ]);
 
         if ($this->editing) {
@@ -141,7 +146,7 @@ class Materials extends Component
         $this->material->farm_id = $this->materialFarmId;
         $this->material->market_id = $this->materialMarketId;
         $this->material->status = $this->materialStatus;
-
+        $this->material->code = $this->materialCode;
         if ($this->materialImage) {
             if ($this->editing && $this->material->image) {
                 Storage::delete($this->material->image);

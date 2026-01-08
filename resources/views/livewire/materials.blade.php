@@ -178,6 +178,32 @@
                 </x-inputs.group>
 
                 <x-inputs.group class="w-full">
+                    <div class="flex items-center gap-2">
+                        <div class="flex-1">
+                            <x-inputs.text
+                                name="materialCode"
+                                label="Código"
+                                wire:model="materialCode"
+                                maxlength="255"
+                                placeholder="Código o escanear código de barras"
+                                id="materialCodeInput"
+                            ></x-inputs.text>
+                        </div>
+                        <div class="mt-6">
+                            <button
+                                type="button"
+                                wire:click="$set('scanningBarcode', true)"
+                                class="button bg-blue-600 hover:bg-blue-700 text-white"
+                                title="Escanear código de barras"
+                            >
+                                <i class="icon ion-md-barcode"></i>
+                            </button>
+                        </div>
+                    </div>
+                    @error('materialCode') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </x-inputs.group>
+                
+                <x-inputs.group class="w-full">
                     <x-inputs.select
                         name="materialFarmId"
                         label="Finca"
@@ -416,5 +442,126 @@
         </div>
     </x-modal>
 
+    <!-- Scanner Modal -->
+    <div
+        x-data="barcodeScanner()"
+        x-show="$wire.scanningBarcode"
+        x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+        style="display: none;"
+    >
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold">Escanear Código de Barras</h3>
+                <button
+                    @click="$wire.set('scanningBarcode', false); stopScanning()"
+                    class="text-gray-500 hover:text-gray-700"
+                >
+                    <i class="icon ion-md-close text-2xl"></i>
+                </button>
+            </div>
+            <div id="barcode-scanner" class="w-full bg-black rounded overflow-hidden" style="min-height: 300px;"></div>
+            <p class="mt-4 text-sm text-gray-600 text-center">Apunta la cámara al código de barras</p>
+            <div class="mt-4 flex justify-center">
+                <button
+                    @click="$wire.set('scanningBarcode', false); stopScanning()"
+                    class="button"
+                >
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
+@push('scripts')
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('barcodeScanner', () => {
+            let html5QrCode = null;
+            let isScanning = false;
+            
+            return {
+                init() {
+                    this.$watch('$wire.scanningBarcode', (value) => {
+                        if (value && !isScanning) {
+                            setTimeout(() => {
+                                this.startScanning();
+                            }, 300);
+                        } else if (!value && isScanning) {
+                            this.stopScanning();
+                        }
+                    });
+                },
+                
+                async startScanning() {
+                    const scannerElement = document.getElementById('barcode-scanner');
+                    if (!scannerElement || isScanning) return;
+                    
+                    try {
+                        // Crear instancia de Html5Qrcode
+                        html5QrCode = new Html5Qrcode("barcode-scanner");
+                        isScanning = true;
+                        
+                        // Configuración para códigos de barras
+                        const config = {
+                            fps: 10,
+                            qrbox: { width: 250, height: 250 },
+                            aspectRatio: 1.0,
+                            supportedScanTypes: [
+                                Html5QrcodeScanType.SCAN_TYPE_CAMERA
+                            ],
+                            formatsToSupport: [
+                                Html5QrcodeSupportedFormats.CODE_128,
+                                Html5QrcodeSupportedFormats.CODE_39,
+                                Html5QrcodeSupportedFormats.CODE_93,
+                                Html5QrcodeSupportedFormats.EAN_13,
+                                Html5QrcodeSupportedFormats.EAN_8,
+                                Html5QrcodeSupportedFormats.UPC_A,
+                                Html5QrcodeSupportedFormats.UPC_E,
+                                Html5QrcodeSupportedFormats.CODABAR,
+                                Html5QrcodeSupportedFormats.ITF
+                            ]
+                        };
+                        
+                        // Iniciar escaneo
+                        await html5QrCode.start(
+                            { facingMode: "environment" },
+                            config,
+                            (decodedText, decodedResult) => {
+                                // Código detectado
+                                @this.set('materialCode', decodedText);
+                                this.stopScanning();
+                                @this.set('scanningBarcode', false);
+                            },
+                            (errorMessage) => {
+                                // Ignorar errores de escaneo continuo
+                            }
+                        );
+                    } catch (err) {
+                        console.error('Error inicializando escáner:', err);
+                        alert('Error al acceder a la cámara. Asegúrate de dar permisos de cámara.');
+                        @this.set('scanningBarcode', false);
+                        isScanning = false;
+                    }
+                },
+                
+                async stopScanning() {
+                    if (html5QrCode && isScanning) {
+                        try {
+                            await html5QrCode.stop();
+                            await html5QrCode.clear();
+                        } catch (err) {
+                            console.error('Error deteniendo escáner:', err);
+                        }
+                        html5QrCode = null;
+                        isScanning = false;
+                    }
+                }
+            };
+        });
+    });
+</script>
+@endpush
