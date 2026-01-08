@@ -14,7 +14,8 @@ use App\Http\Controllers\ManufacturerController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\BreedController;
-
+use App\Http\Livewire\Materials;
+use App\Http\Livewire\InventoryMaterials;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -37,6 +38,8 @@ Route::middleware(['auth:sanctum', 'verified'])
 Route::prefix('/')
     ->middleware(['auth:sanctum', 'verified'])
     ->group(function () {
+        Route::get('materials', Materials::class);
+        Route::get('inventory-materials', InventoryMaterials::class);
         Route::resource('cows', CowController::class);
         Route::get('cows-genealogy/{cow?}', [CowController::class, 'genealogy'])->name('cows.genealogy');
         Route::resource('cow-types', CowTypeController::class);
