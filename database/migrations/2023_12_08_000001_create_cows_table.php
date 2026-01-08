@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::create('cows', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->integer('number')->nullable();
+            $table->string('number')->nullable();
             $table->string('name')->nullable();
             $table->enum('gender', ['male', 'female']);
             $table->string('picture')->nullable();
