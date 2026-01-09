@@ -34,6 +34,13 @@
         </x-dashboard.sidebar-link>
     @endcan
 
+    @can('view-any', App\Models\Material::class)
+        <x-dashboard.sidebar-link id="3" name="Materiales" href="javascript:;" :active="request()->routeIs('materials.index') || request()->routeIs('inventory-materials.index')" icon="{{ 'bx-briefcase-alt-2' }}">
+            <x-dashboard.child-link name="Materiales" href="{{ route('materials.index') }}" />
+            <x-dashboard.child-link name="Inventario" href="{{ route('inventory-materials.index') }}" />
+        </x-dashboard.sidebar-link>
+    @endcan
+
     @if (Auth::user()->isSuperAdmin() ||
                 Auth::user()->can('create', Spatie\Permission\Models\Role::class) ||
                 Auth::user()->can('create', Spatie\Permission\Models\Permission::class))

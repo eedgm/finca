@@ -38,8 +38,8 @@ Route::middleware(['auth:sanctum', 'verified'])
 Route::prefix('/')
     ->middleware(['auth:sanctum', 'verified'])
     ->group(function () {
-        Route::get('materials', Materials::class);
-        Route::get('inventory-materials', InventoryMaterials::class);
+        Route::get('materials', Materials::class)->name('materials.index');
+        Route::get('inventory-materials', InventoryMaterials::class)->name('inventory-materials.index');
         Route::resource('cows', CowController::class);
         Route::get('cows-genealogy/{cow?}', [CowController::class, 'genealogy'])->name('cows.genealogy');
         Route::resource('cow-types', CowTypeController::class);
