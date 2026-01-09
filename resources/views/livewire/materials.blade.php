@@ -90,7 +90,7 @@
                     <td class="px-4 py-3 text-left">
                         @if($material->image)
                             <x-partials.thumbnail
-                                src="{{ \Storage::url($material->image) }}"
+                                src="{{ \Storage::disk('public')->url(str_replace('public/', '', $material->image)) }}"
                             />
                         @else
                             <span class="text-gray-400">-</span>
@@ -244,7 +244,7 @@
 
                 <x-inputs.group class="w-full">
                     <div
-                        x-data="imageViewerWithCompression('{{ $editing && $material && $material->image ? \Storage::url($material->image) : '' }}')"
+                        x-data="imageViewerWithCompression('{{ $editing && $material && $material->image ? \Storage::disk('public')->url(str_replace('public/', '', $material->image)) : '' }}')"
                     >
                         <x-inputs.partials.label
                             name="materialImage"
@@ -342,7 +342,7 @@
                     <h5 class="font-medium text-gray-700">Imagen</h5>
                     @if($material->image)
                         <x-partials.thumbnail
-                            src="{{ \Storage::url($material->image) }}"
+                            src="{{ \Storage::disk('public')->url(str_replace('public/', '', $material->image)) }}"
                             size="150"
                         />
                     @else

@@ -288,8 +288,11 @@ class Materials extends Component
         
         // Save optimized image as JPEG (best compression)
         $filename = uniqid() . '.jpg';
-        $path = $directory . '/' . $filename;
-        $fullPath = storage_path('app/' . $path);
+        
+        // Extract subdirectory from full directory path (e.g., 'materials' from 'public/materials')
+        $subdirectory = str_replace('public/', '', $directory);
+        $path = $subdirectory . '/' . $filename;
+        $fullPath = storage_path('app/public/' . $path);
         
         // Create directory if it doesn't exist
         $dir = dirname($fullPath);
@@ -326,7 +329,8 @@ class Materials extends Component
             }
         }
         
-        return $path;
+        // Return path in format that Storage::url() expects (with 'public/' prefix)
+        return 'public/' . $path;
     }
 
     public function closeModals(): void
