@@ -509,6 +509,7 @@
                                 id="materialImage"
                                 accept="image/*"
                                 x-ref="fileInput"
+                                wire:model="materialImage"
                                 @change="compressAndUpload($event)"
                             />
                         </div>
@@ -607,126 +608,140 @@
 @push('scripts')
 <script>
     document.addEventListener('alpine:init', () => {
-        Alpine.data('imageViewerWithCompression', (src = '') => {
-            return {
-                imageUrl: src,
-                isCompressing: false,
+        if (typeof Alpine.data('imageViewerWithCompression') === 'undefined') {
+            Alpine.data('imageViewerWithCompression', (src = '') => {
+                return {
+                    imageUrl: src,
+                    isCompressing: false,
 
-                refreshUrl() {
-                    this.imageUrl = this.$el.getAttribute("image-url")
-                },
+                    refreshUrl() {
+                        this.imageUrl = this.$el.getAttribute("image-url") || src;
+                    },
 
-                async compressAndUpload(event) {
-                    if (!event.target.files.length) return;
-                    
-                    const originalFile = event.target.files[0];
-                    this.isCompressing = true;
-                    
-                    try {
-                        // Comprimir la imagen
-                        const compressedFile = await this.compressImage(originalFile, 1200, 1200, 0.75);
+                    async compressAndUpload(event) {
+                        if (!event.target.files.length) return;
                         
-                        // Mostrar preview de la imagen comprimida
-                        const reader = new FileReader();
-                        reader.readAsDataURL(compressedFile);
-                        reader.onload = (e) => {
-                            this.imageUrl = e.target.result;
-                        };
+                        const originalFile = event.target.files[0];
+                        this.isCompressing = true;
                         
-                        // Subir directamente a Livewire usando el método upload
-                        @this.upload('materialImage', compressedFile, (uploadedFilename) => {
-                            // Upload successful
-                            this.isCompressing = false;
-                            console.log('Imagen comprimida y subida exitosamente');
-                        }, () => {
-                            // Upload error
-                            this.isCompressing = false;
-                            alert('Error al subir la imagen comprimida.');
-                            event.target.value = '';
-                        }, (event) => {
-                            // Upload progress (opcional, mostrar progreso)
-                            if (event.detail.progress) {
-                                console.log('Progreso:', event.detail.progress + '%');
-                            }
-                        });
-                        
-                    } catch (error) {
-                        console.error('Error comprimiendo imagen:', error);
-                        this.isCompressing = false;
-                        alert('Error al comprimir la imagen. Intenta con otra imagen.');
-                        event.target.value = '';
-                    }
-                },
-
-                async compressImage(file, maxWidth, maxHeight, quality) {
-                    return new Promise((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.readAsDataURL(file);
-                        reader.onload = (e) => {
-                            const img = new Image();
-                            img.src = e.target.result;
+                        try {
+                            // Comprimir la imagen
+                            const compressedFile = await this.compressImage(originalFile, 1200, 1200, 0.75);
                             
-                            img.onload = () => {
-                                const canvas = document.createElement('canvas');
-                                let width = img.width;
-                                let height = img.height;
-                                
-                                // Calcular nuevas dimensiones manteniendo aspect ratio
-                                if (width > maxWidth || height > maxHeight) {
-                                    const ratio = Math.min(maxWidth / width, maxHeight / height);
-                                    width = width * ratio;
-                                    height = height * ratio;
+                            // Mostrar preview de la imagen comprimida
+                            const reader = new FileReader();
+                            reader.readAsDataURL(compressedFile);
+                            reader.onload = (e) => {
+                                this.imageUrl = e.target.result;
+                            };
+                            
+                            // Determinar el nombre de la propiedad basado en el id del input
+                            const inputId = event.target.id;
+                            let propertyName = 'materialImage';
+                            
+                            if (inputId === 'cowPicture') {
+                                propertyName = 'cowPicture';
+                            } else if (inputId === 'historyPicture') {
+                                propertyName = 'historyPicture';
+                            } else if (inputId === 'materialImage') {
+                                propertyName = 'materialImage';
+                            }
+                            
+                            // Subir directamente a Livewire usando el método upload
+                            @this.upload(propertyName, compressedFile, (uploadedFilename) => {
+                                // Upload successful
+                                this.isCompressing = false;
+                                console.log('Imagen comprimida y subida exitosamente');
+                            }, () => {
+                                // Upload error
+                                this.isCompressing = false;
+                                alert('Error al subir la imagen comprimida.');
+                                event.target.value = '';
+                            }, (event) => {
+                                // Upload progress (opcional, mostrar progreso)
+                                if (event.detail && event.detail.progress) {
+                                    console.log('Progreso:', event.detail.progress + '%');
                                 }
+                            });
+                            
+                        } catch (error) {
+                            console.error('Error comprimiendo imagen:', error);
+                            this.isCompressing = false;
+                            alert('Error al comprimir la imagen. Intenta con otra imagen.');
+                            event.target.value = '';
+                        }
+                    },
+
+                    async compressImage(file, maxWidth, maxHeight, quality) {
+                        return new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.readAsDataURL(file);
+                            reader.onload = (e) => {
+                                const img = new Image();
+                                img.src = e.target.result;
                                 
-                                canvas.width = width;
-                                canvas.height = height;
-                                
-                                const ctx = canvas.getContext('2d');
-                                ctx.drawImage(img, 0, 0, width, height);
-                                
-                                // Convertir a blob
-                                canvas.toBlob((blob) => {
-                                    if (!blob) {
-                                        reject(new Error('Error al comprimir la imagen'));
-                                        return;
+                                img.onload = () => {
+                                    const canvas = document.createElement('canvas');
+                                    let width = img.width;
+                                    let height = img.height;
+                                    
+                                    // Calcular nuevas dimensiones manteniendo aspect ratio
+                                    if (width > maxWidth || height > maxHeight) {
+                                        const ratio = Math.min(maxWidth / width, maxHeight / height);
+                                        width = width * ratio;
+                                        height = height * ratio;
                                     }
                                     
-                                    // Crear un File desde el Blob
-                                    const compressedFile = new File([blob], file.name, {
-                                        type: 'image/jpeg',
-                                        lastModified: Date.now()
-                                    });
+                                    canvas.width = width;
+                                    canvas.height = height;
                                     
-                                    resolve(compressedFile);
-                                }, 'image/jpeg', quality);
+                                    const ctx = canvas.getContext('2d');
+                                    ctx.drawImage(img, 0, 0, width, height);
+                                    
+                                    // Convertir a blob
+                                    canvas.toBlob((blob) => {
+                                        if (!blob) {
+                                            reject(new Error('Error al comprimir la imagen'));
+                                            return;
+                                        }
+                                        
+                                        // Crear un File desde el Blob
+                                        const compressedFile = new File([blob], file.name, {
+                                            type: 'image/jpeg',
+                                            lastModified: Date.now()
+                                        });
+                                        
+                                        resolve(compressedFile);
+                                    }, 'image/jpeg', quality);
+                                };
+                                
+                                img.onerror = () => {
+                                    reject(new Error('Error al cargar la imagen'));
+                                };
                             };
                             
-                            img.onerror = () => {
-                                reject(new Error('Error al cargar la imagen'));
+                            reader.onerror = () => {
+                                reject(new Error('Error al leer el archivo'));
                             };
-                        };
-                        
-                        reader.onerror = () => {
-                            reject(new Error('Error al leer el archivo'));
-                        };
-                    });
-                },
+                        });
+                    },
 
-                fileChosen(event) {
-                    this.compressAndUpload(event);
-                },
+                    fileChosen(event) {
+                        this.compressAndUpload(event);
+                    },
 
-                fileToDataUrl(event, callback) {
-                    if (!event.target.files.length) return;
+                    fileToDataUrl(event, callback) {
+                        if (!event.target.files.length) return;
 
-                    let file = event.target.files[0],
-                        reader = new FileReader()
+                        let file = event.target.files[0],
+                            reader = new FileReader()
 
-                    reader.readAsDataURL(file)
-                    reader.onload = e => callback(e.target.result)
-                },
-            }
-        });
+                        reader.readAsDataURL(file)
+                        reader.onload = e => callback(e.target.result)
+                    },
+                }
+            });
+        }
     });
 </script>
 @endpush
