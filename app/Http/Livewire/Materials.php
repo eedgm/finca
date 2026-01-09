@@ -153,7 +153,7 @@ class Materials extends Component
             
             // Compress and optimize image
             $compressedPath = $this->compressImage($this->materialImage, 'public/materials', 1200, 1200, 75);
-            if ($compressedPath) {
+            if ($compressedPath && file_exists(storage_path('app/' . $compressedPath))) {
                 $this->material->image = $compressedPath;
             } else {
                 // Fallback to original if compression fails
@@ -221,10 +221,19 @@ class Materials extends Component
      */
     private function compressImage($imageFile, $directory = 'public', $maxWidth = 1200, $maxHeight = 1200, $quality = 75): ?string
     {
-        $imagePath = $imageFile->getRealPath();
-        $imageInfo = getimagesize($imagePath);
-        
-        if (!$imageInfo) {
+        try {
+            $imagePath = $imageFile->getRealPath();
+            
+            if (!$imagePath || !file_exists($imagePath)) {
+                return null;
+            }
+            
+            $imageInfo = getimagesize($imagePath);
+            
+            if (!$imageInfo) {
+                return null;
+            }
+        } catch (\Exception $e) {
             return null;
         }
         

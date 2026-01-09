@@ -180,12 +180,12 @@ class MedicineIndex extends Component
             }
             
             // Compress and optimize image
-            $compressedPath = $this->compressImage($this->medicinePicture, 'public', 1200, 1200, 75);
+            $compressedPath = $this->compressImage($this->medicinePicture, 'public/medicines', 1200, 1200, 75);
             if ($compressedPath) {
                 $this->medicine->picture = $compressedPath;
             } else {
                 // Fallback to original if compression fails
-                $this->medicine->picture = $this->medicinePicture->store('public');
+                $this->medicine->picture = $this->medicinePicture->store('public/medicines');
             }
         }
 
