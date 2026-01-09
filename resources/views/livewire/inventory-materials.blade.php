@@ -124,7 +124,7 @@
                 @if($material->image)
                 <div class="ml-4">
                     <x-partials.thumbnail
-                        src="{{ \Storage::disk('public')->url(str_replace('public/', '', $material->image)) }}"
+                        src="{{ \Storage::url($material->image) }}"
                         size="60"
                     />
                 </div>
