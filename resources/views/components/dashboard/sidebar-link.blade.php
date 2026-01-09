@@ -24,7 +24,7 @@ $classes = ($active ?? false)
         @endif
     </a>
     @if ($id)
-        <ul x-show="selected == {{ $id }}" x-transition:enter="transition-all duration-200 ease-out" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" class="text-xs lg:text-lg block rounded rounded-t-none top-full z-50 pl-6 py-0.5 text-left mb-1 font-normal" style="display: none;">
+        <ul x-show="selected == {{ $id }}" x-transition:enter="transition-all duration-200 ease-out" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" class="text-xs lg:text-lg block rounded rounded-t-none top-full z-50 pl-1 md:pl-6 py-0.5 text-left mb-1 font-normal" style="display: none;">
             {{ $slot }}
         </ul>
     @endif
