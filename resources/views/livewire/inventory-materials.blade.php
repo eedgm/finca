@@ -1,7 +1,7 @@
 <div>
     <div class="mb-5 mt-4 bg-gray-200 text-black p-4 rounded-lg shadow-md">
         <div class="flex flex-wrap justify-between items-center mb-4">
-            <div class="md:w-1/3">
+            <div class="w-full md:w-1/3">
                 <form wire:submit.prevent="$refresh">
                     <div class="flex items-center w-full">
                         <x-inputs.text
@@ -22,11 +22,11 @@
                     </div>
                 </form>
             </div>
-            <div class="md:w-2/3 text-right space-x-2">
+            <div class="w-full md:w-2/3 text-right space-x-2">
                 @can('create', App\Models\Material::class)
                 <button
                     wire:click="newMaterial"
-                    class="button bg-blue-600 hover:bg-blue-700 text-white"
+                    class=" my-1 md:my-0 button bg-blue-600 hover:bg-blue-700 text-white"
                 >
                     <i class="mr-1 icon ion-md-add-circle"></i>
                     Nuevo Material
@@ -35,21 +35,21 @@
                 @can('create', App\Models\InventoryMaterial::class)
                 <button
                     wire:click="newTransaction('entrada')"
-                    class="button bg-green-600 hover:bg-green-700 text-white"
+                    class=" my-1 md:my-0 button bg-green-600 hover:bg-green-700 text-white"
                 >
                     <i class="mr-1 icon ion-md-add"></i>
                     Agregar Material
                 </button>
                 <button
                     wire:click="newTransaction('salida')"
-                    class="button bg-red-600 hover:bg-red-700 text-white"
+                    class=" my-1 md:my-0 button bg-red-600 hover:bg-red-700 text-white"
                 >
                     <i class="mr-1 icon ion-md-remove"></i>
                     Consumir Material
                 </button>
                 <button
                     wire:click="newTransaction('ajuste')"
-                    class="button bg-yellow-600 hover:bg-yellow-700 text-white"
+                    class=" my-1 md:my-0 button bg-yellow-600 hover:bg-yellow-700 text-white"
                 >
                     <i class="mr-1 icon ion-md-create"></i>
                     Ajustar Material
