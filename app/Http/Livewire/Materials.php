@@ -23,7 +23,6 @@ class Materials extends Component
     public $showingViewModal = false;
     public $modalTitle = 'Nuevo Material';
     public $editing = false;
-    public $scanningBarcode = false;
     
     // Material form properties
     public $material;
