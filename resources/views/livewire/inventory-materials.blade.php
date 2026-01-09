@@ -26,7 +26,7 @@
                 @can('create', App\Models\Material::class)
                 <button
                     wire:click="newMaterial"
-                    class=" my-1 md:my-0 button bg-blue-600 hover:bg-blue-700 text-white"
+                    class="my-1 md:my-0 py-2 px-4 rounded-md shadow-md bg-blue-600 hover:bg-blue-700 text-white"
                 >
                     <i class="mr-1 icon ion-md-add-circle"></i>
                     Nuevo Material
@@ -35,21 +35,21 @@
                 @can('create', App\Models\InventoryMaterial::class)
                 <button
                     wire:click="newTransaction('entrada')"
-                    class=" my-1 md:my-0 button bg-green-600 hover:bg-green-700 text-white"
+                    class="my-1 md:my-0 py-2 px-4 rounded-md shadow-md bg-green-600 hover:bg-green-700 text-white"
                 >
                     <i class="mr-1 icon ion-md-add"></i>
                     Agregar Material
                 </button>
                 <button
                     wire:click="newTransaction('salida')"
-                    class=" my-1 md:my-0 button bg-red-600 hover:bg-red-700 text-white"
+                    class="my-1 md:my-0 py-2 px-4 rounded-md shadow-md bg-red-600 hover:bg-red-700 text-white"
                 >
                     <i class="mr-1 icon ion-md-remove"></i>
                     Consumir Material
                 </button>
                 <button
                     wire:click="newTransaction('ajuste')"
-                    class=" my-1 md:my-0 button bg-yellow-600 hover:bg-yellow-700 text-white"
+                    class="my-1 md:my-0 py-2 px-4 rounded-md shadow-md bg-yellow-600 hover:bg-yellow-700 text-white"
                 >
                     <i class="mr-1 icon ion-md-create"></i>
                     Ajustar Material
@@ -105,9 +105,9 @@
     </div>
 
     <!-- Stock Summary -->
-    <div class="mb-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="mb-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         @foreach($materials as $material)
-        <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+        <div class="bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-sm">
             <div class="flex items-center justify-between">
                 <div class="flex-1">
                     <h3 class="font-semibold text-gray-800">{{ $material->name }}</h3>
