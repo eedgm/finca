@@ -55,6 +55,11 @@ class InventoryMaterials extends Component
     public $filterType = '';
     public $filterMaterialId = '';
     
+    // Image zoom modal
+    public $showingImageZoom = false;
+    public $zoomedImageUrl = '';
+    public $zoomedImageTitle = '';
+    
     // Data for selects
     public $materialsForSelect = [];
     public $farmsForSelect = [];
@@ -141,7 +146,17 @@ class InventoryMaterials extends Component
 
     public function saveTransaction(): void
     {
-        $this->validate();
+        $this->validate([
+            'materialId' => ['required', 'exists:materials,id'],
+            'quantity' => ['required', 'integer', 'min:1'],
+            'cost' => ['nullable', 'numeric', 'min:0'],
+            'type' => ['required', 'in:entrada,salida,ajuste'],
+        ], [], [
+            'materialId' => 'material',
+            'quantity' => 'cantidad',
+            'cost' => 'costo',
+            'type' => 'tipo',
+        ]);
 
         // For salida, check if there's enough stock
         if ($this->type === 'salida') {
@@ -316,12 +331,27 @@ class InventoryMaterials extends Component
         $this->loadSelectData();
     }
 
+    public function zoomImage($imageUrl, $title = ''): void
+    {
+        $this->zoomedImageUrl = $imageUrl;
+        $this->zoomedImageTitle = $title;
+        $this->showingImageZoom = true;
+    }
+    
+    public function closeImageZoom(): void
+    {
+        $this->showingImageZoom = false;
+        $this->zoomedImageUrl = '';
+        $this->zoomedImageTitle = '';
+    }
+
     public function closeModals(): void
     {
         $this->showingModal = false;
         $this->showingViewModal = false;
         $this->showingMaterialModal = false;
         $this->showingMarketModal = false;
+        $this->showingImageZoom = false;
         $this->resetForm();
         $this->resetMaterialForm();
     }

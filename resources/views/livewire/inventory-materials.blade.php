@@ -123,10 +123,15 @@
                 </div>
                 @if($material->image)
                 <div class="ml-4">
-                    <x-partials.thumbnail
-                        src="{{ \Storage::url($material->image) }}"
-                        size="60"
-                    />
+                    <div
+                        wire:click="zoomImage('{{ \Storage::url($material->image) }}', '{{ $material->name }}')"
+                        class="cursor-pointer hover:opacity-80 transition-opacity"
+                    >
+                        <x-partials.thumbnail
+                            src="{{ \Storage::url($material->image) }}"
+                            size="60"
+                        />
+                    </div>
                 </div>
                 @endif
             </div>
@@ -283,6 +288,7 @@
                         wire:model="type"
                         required
                     >
+                        <option value="">Seleccione un Tipo</option>
                         <option value="entrada">Entrada</option>
                         <option value="salida">Salida</option>
                         <option value="ajuste">Ajuste</option>
@@ -600,6 +606,36 @@
             >
                 <i class="mr-1 icon ion-md-save"></i>
                 Guardar
+            </button>
+        </div>
+    </x-modal>
+
+    <!-- Modal para Zoom de Imagen -->
+    <x-modal wire:model="showingImageZoom">
+        <div class="px-6 py-4">
+            @if($zoomedImageTitle)
+            <div class="text-lg font-bold mb-4">{{ $zoomedImageTitle }}</div>
+            @endif
+            
+            <div class="flex justify-center items-center max-h-[85vh] overflow-auto">
+                @if($zoomedImageUrl)
+                <img
+                    src="{{ $zoomedImageUrl }}"
+                    alt="{{ $zoomedImageTitle }}"
+                    class="max-w-full max-h-[80vh] object-contain rounded-lg shadow-lg"
+                />
+                @endif
+            </div>
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 flex justify-end">
+            <button
+                type="button"
+                class="button"
+                wire:click="closeImageZoom"
+            >
+                <i class="mr-1 icon ion-md-close"></i>
+                Cerrar
             </button>
         </div>
     </x-modal>
