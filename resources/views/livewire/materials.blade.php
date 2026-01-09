@@ -1,5 +1,5 @@
 <div>
-    <div class="mb-5 mt-4 p-4 bg-black text-white">
+    <div class="mb-5 mt-4 p-4 bg-gray-200">
         <div class="flex flex-wrap justify-between">
             <div class="md:w-1/2">
                 <form wire:submit.prevent="$refresh">
@@ -36,9 +36,9 @@
         </div>
     </div>
 
-    <div class="block w-full overflow-auto scrolling-touch text-white bg-black">
+    <div class="block w-full overflow-auto scrolling-touch text-black bg-gray-200">
         <table class="w-full max-w-full mb-4 bg-transparent">
-            <thead class="text-gray-100">
+            <thead class="text-gray-700">
                 <tr>
                     <th class="px-4 py-3 text-left">
                         Estado
@@ -61,7 +61,7 @@
                     <th></th>
                 </tr>
             </thead>
-            <tbody class="text-gray-600">
+            <tbody class="text-gray-700">
                 @forelse($materials as $material)
                 <tr class="hover:bg-gray-700 odd:bg-gray-900 even:bg-gray-800 text-white">
                     <td class="px-4 py-3 text-left">
@@ -131,7 +131,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7">
+                    <td class="px-4 py-3 text-center" colspan="7">
                         @lang('crud.common.no_items_found')
                     </td>
                 </tr>
