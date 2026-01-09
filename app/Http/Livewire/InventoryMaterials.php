@@ -389,11 +389,8 @@ class InventoryMaterials extends Component
         
         // Save optimized image as JPEG (best compression)
         $filename = uniqid() . '.jpg';
-        
-        // Extract subdirectory from full directory path (e.g., 'materials' from 'public/materials')
-        $subdirectory = str_replace('public/', '', $directory);
-        $path = $subdirectory . '/' . $filename;
-        $fullPath = storage_path('app/public/' . $path);
+        $path = $directory . '/' . $filename;
+        $fullPath = storage_path('app/' . $path);
         
         // Create directory if it doesn't exist
         $dir = dirname($fullPath);
@@ -430,8 +427,7 @@ class InventoryMaterials extends Component
             }
         }
         
-        // Return path in format that Storage::url() expects (with 'public/' prefix)
-        return 'public/' . $path;
+        return $path;
     }
 
     public function closeModals(): void
