@@ -24,7 +24,7 @@ class FarmStoreRequest extends FormRequest
             'latitude' => ['nullable', 'numeric'],
             'longitude' => ['nullable', 'numeric'],
             'description' => ['nullable', 'max:255', 'string'],
-            'cattle_brand' => ['image', 'max:1024', 'nullable'],
+            'cattle_brand' => ['image', 'max:5000', 'nullable'],
         ];
     }
 }
