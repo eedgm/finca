@@ -446,27 +446,39 @@
     @if($scanningBarcode)
     <div
         x-data="barcodeScanner()"
-        x-init="startScanning()"
+        x-init="initScanner()"
         class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
     >
         <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-bold">Escanear Código de Barras</h3>
                 <button
-                    @click="$wire.set('scanningBarcode', false); stopScanning()"
+                    @click="$wire.set('scanningBarcode', false); stopScanner()"
                     class="text-gray-500 hover:text-gray-700"
                 >
                     <i class="icon ion-md-close text-2xl"></i>
                 </button>
             </div>
-            <div id="barcode-scanner" class="w-full bg-black rounded overflow-hidden" style="min-height: 400px;"></div>
+            <div class="relative">
+                <video id="scanner-video" class="w-full bg-black rounded overflow-hidden" style="min-height: 300px; display: none;"></video>
+                <canvas id="scanner-canvas" class="w-full bg-black rounded overflow-hidden" style="min-height: 300px; display: none;"></canvas>
+                <div id="scanner-placeholder" class="w-full bg-black rounded overflow-hidden flex items-center justify-center" style="min-height: 300px;">
+                    <p class="text-white">Iniciando cámara...</p>
+                </div>
+            </div>
             <p class="mt-4 text-sm text-gray-600 text-center">
                 <i class="icon ion-md-information-circle"></i> 
-                Apunta la cámara al código de barras. Asegúrate de que esté bien iluminado y enfocado.
+                Apunta la cámara al código de barras o captura una foto
             </p>
-            <div class="mt-4 flex justify-center">
+            <div class="mt-4 flex justify-center gap-2">
                 <button
-                    @click="$wire.set('scanningBarcode', false); stopScanning()"
+                    @click="captureAndProcess()"
+                    class="button bg-green-600 hover:bg-green-700 text-white"
+                >
+                    <i class="icon ion-md-camera"></i> Capturar y Procesar
+                </button>
+                <button
+                    @click="$wire.set('scanningBarcode', false); stopScanner()"
                     class="button"
                 >
                     Cancelar
@@ -479,138 +491,181 @@
 </div>
 
 @push('scripts')
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://unpkg.com/@zxing/library@latest"></script>
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.data('barcodeScanner', () => {
-            let html5QrCode = null;
+            let codeReader = null;
+            let stream = null;
+            let video = null;
+            let canvas = null;
             let isScanning = false;
+            let scanInterval = null;
             
             return {
-                async startScanning() {
-                    if (isScanning) return;
+                async initScanner() {
+                    video = document.getElementById('scanner-video');
+                    canvas = document.getElementById('scanner-canvas');
+                    const placeholder = document.getElementById('scanner-placeholder');
                     
-                    const scannerElement = document.getElementById('barcode-scanner');
-                    if (!scannerElement) {
-                        console.error('Elemento scanner no encontrado');
+                    try {
+                        // Obtener acceso a la cámara
+                        stream = await navigator.mediaDevices.getUserMedia({
+                            video: {
+                                facingMode: 'environment', // Cámara trasera
+                                width: { ideal: 1280 },
+                                height: { ideal: 720 }
+                            }
+                        });
+                        
+                        video.srcObject = stream;
+                        video.setAttribute('playsinline', 'true');
+                        await video.play();
+                        
+                        // Ocultar placeholder y mostrar video
+                        placeholder.style.display = 'none';
+                        video.style.display = 'block';
+                        
+                        // Inicializar ZXing para escaneo en tiempo real
+                        codeReader = new ZXing.BrowserMultiFormatReader();
+                        isScanning = true;
+                        
+                        // Escanear continuamente
+                        this.scanContinuously();
+                        
+                    } catch (err) {
+                        console.error('Error inicializando escáner:', err);
+                        placeholder.innerHTML = '<p class="text-red-500">Error al acceder a la cámara. Usa "Capturar y Procesar" para tomar una foto.</p>';
+                        
+                        if (err.name === 'NotAllowedError') {
+                            alert('Por favor, permite el acceso a la cámara en la configuración del navegador.');
+                        } else if (err.name === 'NotFoundError') {
+                            alert('No se encontró ninguna cámara disponible.');
+                        }
+                    }
+                },
+                
+                async scanContinuously() {
+                    if (!video || !isScanning || !codeReader) return;
+                    
+                    try {
+                        // Usar decodeFromVideoDevice para escaneo continuo
+                        codeReader.decodeFromVideoDevice(null, video, (result, error) => {
+                            if (result) {
+                                console.log('Código detectado:', result.text);
+                                @this.set('materialCode', result.text);
+                                this.stopScanner();
+                                @this.set('scanningBarcode', false);
+                            }
+                            if (error) {
+                                // Ignorar errores de escaneo continuo (NotFoundError es normal)
+                                if (!error.message.includes('NotFoundException') && 
+                                    !error.message.includes('No MultiFormat Readers')) {
+                                    console.debug('Escaneo:', error.message);
+                                }
+                            }
+                        });
+                    } catch (err) {
+                        console.error('Error en escaneo continuo:', err);
+                    }
+                },
+                
+                async captureAndProcess() {
+                    if (!video || !stream) {
+                        alert('La cámara no está disponible. Por favor, permite el acceso a la cámara.');
                         return;
                     }
                     
                     try {
-                        // Limpiar cualquier instancia anterior
-                        if (html5QrCode) {
+                        // Ocultar video y mostrar canvas
+                        video.style.display = 'none';
+                        canvas.style.display = 'block';
+                        
+                        // Configurar canvas
+                        const context = canvas.getContext('2d');
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        
+                        // Capturar frame del video
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        
+                        // Convertir canvas a imagen
+                        const imageData = canvas.toDataURL('image/png');
+                        
+                        // Procesar con ZXing para códigos de barras
+                        const codeReader = new ZXing.BrowserMultiFormatReader();
+                        const img = new Image();
+                        img.src = imageData;
+                        
+                        img.onload = async () => {
                             try {
-                                await html5QrCode.stop();
-                                await html5QrCode.clear();
-                            } catch (e) {
-                                // Ignorar errores al limpiar
+                                // Intentar detectar código de barras
+                                const result = await codeReader.decodeFromImageElement(img);
+                                
+                                if (result && result.text) {
+                                    console.log('Código detectado en imagen:', result.text);
+                                    @this.set('materialCode', result.text);
+                                    this.stopScanner();
+                                    @this.set('scanningBarcode', false);
+                                } else {
+                                    alert('No se pudo detectar un código de barras en la imagen. Intenta de nuevo con mejor iluminación.');
+                                    // Volver a mostrar video
+                                    canvas.style.display = 'none';
+                                    video.style.display = 'block';
+                                }
+                            } catch (decodeErr) {
+                                console.error('Error procesando imagen:', decodeErr);
+                                alert('No se pudo detectar un código de barras en la imagen. Asegúrate de que el código esté bien visible y enfocado.');
+                                // Volver a mostrar video
+                                canvas.style.display = 'none';
+                                video.style.display = 'block';
                             }
-                        }
-                        
-                        // Crear nueva instancia
-                        html5QrCode = new Html5Qrcode("barcode-scanner");
-                        isScanning = true;
-                        
-                        // Configuración optimizada para códigos de barras
-                        // Nota: html5-qrcode funciona mejor con códigos QR, pero también soporta códigos de barras
-                        const config = {
-                            fps: 10, // FPS estándar
-                            qrbox: { width: 300, height: 200 }, // Área rectangular para códigos de barras
-                            aspectRatio: 1.0,
-                            disableFlip: false,
-                            rememberLastUsedCamera: true,
-                            // Formatos de códigos de barras más comunes
-                            formatsToSupport: [
-                                Html5QrcodeSupportedFormats.CODE_128,
-                                Html5QrcodeSupportedFormats.CODE_39,
-                                Html5QrcodeSupportedFormats.CODE_93,
-                                Html5QrcodeSupportedFormats.EAN_13,
-                                Html5QrcodeSupportedFormats.EAN_8,
-                                Html5QrcodeSupportedFormats.UPC_A,
-                                Html5QrcodeSupportedFormats.UPC_E,
-                                Html5QrcodeSupportedFormats.CODABAR,
-                                Html5QrcodeSupportedFormats.ITF
-                            ],
-                            verbose: false
                         };
                         
-                        // Intentar obtener la cámara trasera primero
-                        const cameras = await Html5Qrcode.getCameras();
-                        let cameraId = null;
+                        img.onerror = () => {
+                            alert('Error al procesar la imagen. Intenta de nuevo.');
+                            canvas.style.display = 'none';
+                            video.style.display = 'block';
+                        };
                         
-                        // Buscar cámara trasera
-                        for (let camera of cameras) {
-                            if (camera.label.toLowerCase().includes('back') || 
-                                camera.label.toLowerCase().includes('rear') ||
-                                camera.label.toLowerCase().includes('environment')) {
-                                cameraId = camera.id;
-                                break;
-                            }
-                        }
-                        
-                        // Si no hay cámara trasera, usar la primera disponible
-                        if (!cameraId && cameras.length > 0) {
-                            cameraId = cameras[0].id;
-                        }
-                        
-                        if (!cameraId) {
-                            throw new Error('No se encontró ninguna cámara disponible');
-                        }
-                        
-                        // Iniciar escaneo con configuración mejorada
-                        await html5QrCode.start(
-                            cameraId,
-                            config,
-                            (decodedText, decodedResult) => {
-                                // Código detectado
-                                console.log('Código detectado:', decodedText);
-                                console.log('Formato:', decodedResult.result.format);
-                                
-                                // Verificar que sea un código de barras válido
-                                if (decodedText && decodedText.length > 0) {
-                                    @this.set('materialCode', decodedText);
-                                    this.stopScanning();
-                                    @this.set('scanningBarcode', false);
-                                }
-                            },
-                            (errorMessage) => {
-                                // Solo mostrar errores importantes en consola
-                                // NotFoundError es normal durante el escaneo continuo
-                                if (!errorMessage.includes('NotFoundException')) {
-                                    console.debug('Escaneo:', errorMessage);
-                                }
-                            }
-                        );
                     } catch (err) {
-                        console.error('Error inicializando escáner:', err);
-                        isScanning = false;
-                        html5QrCode = null;
-                        
-                        let errorMsg = 'Error al acceder a la cámara. ';
-                        if (err.name === 'NotAllowedError') {
-                            errorMsg += 'Por favor, permite el acceso a la cámara en la configuración del navegador.';
-                        } else if (err.name === 'NotFoundError') {
-                            errorMsg += 'No se encontró ninguna cámara disponible.';
-                        } else {
-                            errorMsg += err.message || 'Asegúrate de dar permisos de cámara.';
-                        }
-                        
-                        alert(errorMsg);
-                        @this.set('scanningBarcode', false);
+                        console.error('Error capturando imagen:', err);
+                        alert('Error al capturar la imagen. Intenta de nuevo.');
+                        canvas.style.display = 'none';
+                        video.style.display = 'block';
                     }
                 },
                 
-                async stopScanning() {
-                    if (html5QrCode && isScanning) {
-                        try {
-                            await html5QrCode.stop();
-                            await html5QrCode.clear();
-                        } catch (err) {
-                            console.error('Error deteniendo escáner:', err);
-                        }
-                        html5QrCode = null;
-                        isScanning = false;
+                async stopScanner() {
+                    isScanning = false;
+                    
+                    if (scanInterval) {
+                        clearInterval(scanInterval);
+                        scanInterval = null;
                     }
+                    
+                    if (codeReader) {
+                        try {
+                            codeReader.reset();
+                        } catch (err) {
+                            console.error('Error reseteando scanner:', err);
+                        }
+                        codeReader = null;
+                    }
+                    
+                    if (stream) {
+                        stream.getTracks().forEach(track => track.stop());
+                        stream = null;
+                    }
+                    
+                    if (video) {
+                        video.srcObject = null;
+                        video.pause();
+                    }
+                    
+                    // Ocultar elementos
+                    if (video) video.style.display = 'none';
+                    if (canvas) canvas.style.display = 'none';
                 }
             };
         });
