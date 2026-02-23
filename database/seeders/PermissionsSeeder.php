@@ -91,6 +91,13 @@ class PermissionsSeeder extends Seeder
         Permission::create(['name' => 'update inventory materials']);
         Permission::create(['name' => 'delete inventory materials']);
 
+        // Animal sales (Ventas de animales) permissions
+        Permission::create(['name' => 'list animal-sales']);
+        Permission::create(['name' => 'view animal-sales']);
+        Permission::create(['name' => 'create animal-sales']);
+        Permission::create(['name' => 'update animal-sales']);
+        Permission::create(['name' => 'delete animal-sales']);
+
         // Create user role and assign existing permissions
         $currentPermissions = Permission::all();
         $userRole = Role::create(['name' => 'user']);

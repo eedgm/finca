@@ -16,11 +16,14 @@
         </x-dashboard.sidebar-link>
     @endcan
     @can('view-any', App\Models\Cow::class)
-        <x-dashboard.sidebar-link id="1" name="Vacas" href="javascript:;" :active="request()->routeIs('cows.index') || request()->routeIs('cows.genealogy')" icon="{{ 'bxs-group' }}">
+        <x-dashboard.sidebar-link id="1" name="Vacas" href="javascript:;" :active="request()->routeIs('cows.index') || request()->routeIs('cows.genealogy') || request()->routeIs('animal-sales.index')" icon="{{ 'bxs-group' }}">
             <x-dashboard.child-link name="Todas" href="{{ route('cows.index') }}" />
             <x-dashboard.child-link name="Árbol Genealógico" href="{{ route('cows.genealogy') }}" />
             <x-dashboard.child-link name="Historial" href="{{ route('histories.index') }}" />
             <x-dashboard.child-link name="Ventas" href="{{ route('solds.index') }}" />
+            @can('viewAny', App\Models\Sale::class)
+            <x-dashboard.child-link name="Ventas de animales" href="{{ route('animal-sales.index') }}" />
+            @endcan
         </x-dashboard.sidebar-link>
     @endcan
     @can('view-any', App\Models\Breed::class)

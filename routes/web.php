@@ -16,6 +16,7 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\BreedController;
 use App\Http\Livewire\Materials;
 use App\Http\Livewire\InventoryMaterials;
+use App\Http\Livewire\AnimalSales;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -40,6 +41,7 @@ Route::prefix('/')
     ->group(function () {
         Route::get('materials', Materials::class)->name('materials.index');
         Route::get('inventory-materials', InventoryMaterials::class)->name('inventory-materials.index');
+        Route::get('animal-sales', AnimalSales::class)->name('animal-sales.index');
         Route::resource('cows', CowController::class);
         Route::get('cows-genealogy/{cow?}', [CowController::class, 'genealogy'])->name('cows.genealogy');
         Route::resource('cow-types', CowTypeController::class);
